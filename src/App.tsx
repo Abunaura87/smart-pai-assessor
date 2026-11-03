@@ -22,7 +22,7 @@ import { ParameterPanel } from './components/ParameterPanel';
 import { AssessmentDocument } from './components/AssessmentDocument';
 import { KaidahValidatorSection } from './components/KaidahValidatorSection';
 import { KopPejabatForm } from './components/KopPejabatForm';
-import { BookCheck, Layers, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
+import { BookCheck, Layers, Loader2, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
 
 export default function App() {
   const [activePackage, setActivePackage] = useState<AssessmentPackage>(PRESET_PACKAGES[0]);
@@ -110,17 +110,13 @@ export default function App() {
 
   const handleGenerateAssessment = async (paramsToGenerate: AssessmentParameters) => {
     setIsGenerating(true);
-    // Immediately synthesize deterministic blueprint & items so UI updates with zero latency
-    const immediatePkg = buildCustomFallbackPackage(paramsToGenerate);
-    setActivePackage(immediatePkg);
-    syncKopForPackage(immediatePkg);
     setStatusMessage(
-      `Instrumen asesmen "${immediatePkg.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
+      `Sedang menyusun Matriks Kisi-Kisi, Stimulus Ayat/Tabel/Kasus, Naskah Soal, Kartu Soal & Rubrik (${paramsToGenerate.fase} · ${paramsToGenerate.kelas})...`
     );
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
       const response = await fetch('/api/assess/generate', {
         method: 'POST',
@@ -138,10 +134,23 @@ export default function App() {
           setStatusMessage(
             `Instrumen asesmen "${data.package.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
           );
+          return;
         }
       }
+
+      const fallbackPkg = buildCustomFallbackPackage(paramsToGenerate);
+      setActivePackage(fallbackPkg);
+      syncKopForPackage(fallbackPkg);
+      setStatusMessage(
+        `Instrumen asesmen "${fallbackPkg.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
+      );
     } catch {
-      // Immediate package is already active and valid
+      const fallbackPkg = buildCustomFallbackPackage(paramsToGenerate);
+      setActivePackage(fallbackPkg);
+      syncKopForPackage(fallbackPkg);
+      setStatusMessage(
+        `Instrumen asesmen "${fallbackPkg.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -270,23 +279,34 @@ export default function App() {
             </div>
           </section>
 
-          {/* Status Notification */}
-          {statusMessage && (
+          {/* Status / Loading Notification */}
+          {(isGenerating || statusMessage) && (
             <div
               role="status"
-              className="no-print flex items-center justify-between gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900"
+              data-testid="generation-status-banner"
+              className={`no-print flex items-center justify-between gap-3 px-4 py-3 border rounded-xl text-xs ${
+                isGenerating
+                  ? 'bg-amber-50 border-amber-300 text-amber-950'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <BookCheck className="w-4 h-4 text-emerald-800 shrink-0" />
-                <span>{statusMessage}</span>
+              <div className="flex items-center gap-2.5">
+                {isGenerating ? (
+                  <Loader2 className="w-4 h-4 text-amber-700 animate-spin shrink-0" />
+                ) : (
+                  <BookCheck className="w-4 h-4 text-emerald-800 shrink-0" />
+                )}
+                <span className="font-medium">{statusMessage}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setStatusMessage(null)}
-                className="text-emerald-800 hover:underline font-medium shrink-0 cursor-pointer"
-              >
-                Tutup
-              </button>
+              {!isGenerating && (
+                <button
+                  type="button"
+                  onClick={() => setStatusMessage(null)}
+                  className="text-emerald-800 hover:underline font-medium shrink-0 cursor-pointer"
+                >
+                  Tutup
+                </button>
+              )}
             </div>
           )}
 

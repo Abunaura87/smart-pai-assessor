@@ -9,6 +9,7 @@ import {
   formatKelasSemester,
   getPracticeInstrument,
 } from './paiRules';
+import { renderStimulusHtmlString } from './stimulusParser';
 
 // Embedded SVG Data URLs for official Indonesian education & ministry emblems
 const PEMDA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="72" height="84">
@@ -201,6 +202,8 @@ export function buildRichDocumentHtml(
   const pgSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal !== 'Uraian' && s.bentukSoal !== 'Isian Singkat'
   );
+  const isianSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Isian Singkat');
+  const uraianMurniSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Uraian');
   const uraianSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal === 'Uraian' || s.bentukSoal === 'Isian Singkat'
   );
@@ -275,11 +278,7 @@ export function buildRichDocumentHtml(
       ${items
         .map((soal, idx) => {
           const displayNum = isUraianSection && kop.layoutMode === 'kkg' ? idx + 1 : soal.nomor;
-          const stimulusHtml = soal.stimulus
-            ? `<div style="margin-bottom:4pt; text-align:justify; line-height:1.4;">${escapeHtml(
-                soal.stimulus
-              ).replace(/\n/g, '<br/>')}</div>`
-            : '';
+          const stimulusHtml = soal.stimulus ? renderStimulusHtmlString(soal.stimulus) : '';
           const instruksiHtml = soal.instruksiKhusus
             ? `<div style="margin-bottom:3pt; font-style:italic; font-weight:bold;">${escapeHtml(
                 soal.instruksiKhusus
@@ -731,15 +730,31 @@ export function buildRichDocumentHtml(
         : ''
     }
     ${
-      uraianSoal.length > 0
+      isianSoal.length > 0
         ? `<div style="font-weight:bold; margin-top:12pt; margin-bottom:6pt;">
             ${
               kop.layoutMode === 'us'
-                ? `II. Kerjakanlah soal Essay / Uraian berikut ini dengan benar dan jelas!`
+                ? `II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!`
+                : `B. Isian Singkat`
+            }
+          </div>
+          ${renderSoalListHtml(isianSoal, true)}`
+        : ''
+    }
+    ${
+      uraianMurniSoal.length > 0
+        ? `<div style="font-weight:bold; margin-top:12pt; margin-bottom:6pt;">
+            ${
+              kop.layoutMode === 'us'
+                ? isianSoal.length > 0
+                  ? `III. Kerjakanlah soal Essay / Uraian berikut ini dengan benar dan jelas!`
+                  : `II. Kerjakanlah soal Essay / Uraian berikut ini dengan benar dan jelas!`
+                : isianSoal.length > 0
+                ? `C. Uraian`
                 : `B. Uraian`
             }
           </div>
-          ${renderSoalListHtml(uraianSoal, true)}`
+          ${renderSoalListHtml(uraianMurniSoal, true)}`
         : ''
     }
   </div>`;
@@ -1036,6 +1051,8 @@ export function buildPlainTextWithoutMarkdown(
   const pgSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal !== 'Uraian' && s.bentukSoal !== 'Isian Singkat'
   );
+  const isianSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Isian Singkat');
+  const uraianMurniSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Uraian');
   const uraianSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal === 'Uraian' || s.bentukSoal === 'Isian Singkat'
   );
@@ -1080,10 +1097,20 @@ export function buildPlainTextWithoutMarkdown(
     }
   }
 
-  if (uraianSoal.length > 0) {
-    lines.push('B. Uraian');
+  if (isianSoal.length > 0) {
+    lines.push('B. Isian Singkat');
     lines.push('');
-    uraianSoal.forEach((s, idx) => {
+    isianSoal.forEach((s, idx) => {
+      const num = kop.layoutMode === 'kkg' ? idx + 1 : s.nomor;
+      lines.push(`${num}. ${s.stimulus ? `${s.stimulus}\n   ` : ''}${s.pertanyaan}`);
+      lines.push('');
+    });
+  }
+
+  if (uraianMurniSoal.length > 0) {
+    lines.push(isianSoal.length > 0 ? 'C. Uraian' : 'B. Uraian');
+    lines.push('');
+    uraianMurniSoal.forEach((s, idx) => {
       const num = kop.layoutMode === 'kkg' ? idx + 1 : s.nomor;
       lines.push(`${num}. ${s.stimulus ? `${s.stimulus}\n   ` : ''}${s.pertanyaan}`);
       lines.push('');

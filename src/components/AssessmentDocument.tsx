@@ -17,6 +17,7 @@ import {
   LOGO_PRESET_DATA_URLS,
   resolveLogoUrl,
 } from '../utils/documentExporter';
+import { parseStimulusSegments } from '../utils/stimulusParser';
 import { KopPejabatForm } from './KopPejabatForm';
 import {
   Copy,
@@ -89,9 +90,84 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
   const practiceInstrument = getPracticeInstrument(pkg);
 
+  const renderStructuredStimulus = (stimulus?: string) => {
+    if (!stimulus) return null;
+    const segments = parseStimulusSegments(stimulus);
+    return (
+      <div className="space-y-2">
+        {segments.map((seg, sIdx) => {
+          if (seg.type === 'table') {
+            return (
+              <div key={sIdx} className="overflow-x-auto my-2">
+                <table
+                  data-testid="stimulus-table"
+                  className="w-full text-xs sm:text-sm text-left border-collapse border border-black"
+                >
+                  {seg.headers.length > 0 && (
+                    <thead>
+                      <tr className="bg-slate-100 border-b border-black font-bold">
+                        {seg.headers.map((header, hIdx) => (
+                          <th
+                            key={hIdx}
+                            className={`py-1.5 px-2.5 border border-black ${
+                              hIdx === 0 && header.length <= 6 ? 'text-center w-16' : 'text-left'
+                            }`}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  )}
+                  <tbody>
+                    {seg.rows.map((row, rIdx) => (
+                      <tr key={rIdx} className="border-b border-black">
+                        {row.map((cell, cIdx) => (
+                          <td
+                            key={cIdx}
+                            className={`py-1.5 px-2.5 border border-black align-top ${
+                              cIdx === 0 && cell.length <= 4 ? 'text-center font-semibold' : 'text-left'
+                            }`}
+                          >
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          }
+
+          if (seg.type === 'arabic') {
+            return (
+              <div
+                key={sIdx}
+                dir="rtl"
+                data-testid="stimulus-arabic"
+                className="my-2 py-1 text-right font-serif text-lg sm:text-xl leading-loose font-bold text-black"
+              >
+                {seg.content}
+              </div>
+            );
+          }
+
+          return (
+            <div key={sIdx} className="whitespace-pre-line text-justify leading-relaxed">
+              {seg.content}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const pgAndObjektifSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal !== 'Uraian' && s.bentukSoal !== 'Isian Singkat'
   );
+  const isianSingkatSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Isian Singkat');
+  const uraianSoal = pkg.butirSoal.filter((s) => s.bentukSoal === 'Uraian');
   const uraianAndIsianSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal === 'Uraian' || s.bentukSoal === 'Isian Singkat'
   );
@@ -887,11 +963,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
                         <div className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed">
                           <span className="font-semibold shrink-0 w-5">{soal.nomor}.</span>
                           <div className="flex-1 space-y-2 min-w-0">
-                            {soal.stimulus && (
-                              <div className="whitespace-pre-line text-justify leading-relaxed">
-                                {soal.stimulus}
-                              </div>
-                            )}
+                            {renderStructuredStimulus(soal.stimulus)}
 
                             {soal.instruksiKhusus && (
                               <p className="italic font-semibold">{soal.instruksiKhusus}</p>
@@ -993,17 +1065,17 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
               </div>
             )}
 
-            {/* Sub-bagian II / B: Soal Uraian / Essay */}
-            {uraianAndIsianSoal.length > 0 && (
-              <div className="space-y-4 pt-3 font-serif text-black">
+            {/* Sub-bagian B: Soal Isian Singkat (Dipisahkan tegas dari Uraian) */}
+            {isianSingkatSoal.length > 0 && (
+              <div data-testid="section-isian-singkat" className="space-y-4 pt-3 font-serif text-black">
                 <div className="text-xs sm:text-sm font-bold text-black">
                   {kopConfig.layoutMode === 'us'
-                    ? 'II. Kerjakanlah soal Essay berikut ini dengan tepat dan jelas!'
-                    : 'B. Uraian'}
+                    ? 'II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!'
+                    : 'B. Isian Singkat — Isilah titik-titik di bawah ini dengan jawaban yang tepat!'}
                 </div>
 
                 <div className="space-y-4">
-                  {uraianAndIsianSoal.map((soal, idx) => {
+                  {isianSingkatSoal.map((soal, idx) => {
                     const isHighlighted = highlightedBlueprintNo === soal.blueprintNo;
                     const displayNum = kopConfig.layoutMode === 'kkg' ? idx + 1 : soal.nomor;
                     return (
@@ -1038,11 +1110,67 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
                         <div className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed">
                           <span className="font-semibold shrink-0 w-5">{displayNum}.</span>
                           <div className="flex-1 space-y-2 min-w-0">
-                            {soal.stimulus && (
-                              <div className="whitespace-pre-line text-justify leading-relaxed">
-                                {soal.stimulus}
-                              </div>
-                            )}
+                            {renderStructuredStimulus(soal.stimulus)}
+                            <p className="whitespace-pre-line text-justify">{soal.pertanyaan}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-bagian Uraian / Essay (Kalimat perintah/tanya terbuka) */}
+            {uraianSoal.length > 0 && (
+              <div data-testid="section-uraian" className="space-y-4 pt-3 font-serif text-black">
+                <div className="text-xs sm:text-sm font-bold text-black">
+                  {kopConfig.layoutMode === 'us'
+                    ? isianSingkatSoal.length > 0
+                      ? 'III. Kerjakanlah soal Essay / Uraian berikut ini dengan tepat dan jelas!'
+                      : 'II. Kerjakanlah soal Essay / Uraian berikut ini dengan tepat dan jelas!'
+                    : isianSingkatSoal.length > 0
+                    ? 'C. Uraian — Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan benar!'
+                    : 'B. Uraian — Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan benar!'}
+                </div>
+
+                <div className="space-y-4">
+                  {uraianSoal.map((soal, idx) => {
+                    const isHighlighted = highlightedBlueprintNo === soal.blueprintNo;
+                    const displayNum = kopConfig.layoutMode === 'kkg' ? idx + 1 : soal.nomor;
+                    return (
+                      <div
+                        key={soal.nomor}
+                        id={`soal-${soal.nomor}`}
+                        className={`p-4 rounded-lg border transition-colors print-break-inside-avoid print-clean-card space-y-2 ${
+                          isHighlighted
+                            ? 'border-emerald-700 bg-emerald-50/30'
+                            : studentSheetOnly
+                            ? 'border-transparent bg-white py-1 px-0'
+                            : 'border-slate-200 bg-white'
+                        }`}
+                      >
+                        {!studentSheetOnly && (
+                          <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5 text-[11px] font-sans text-slate-500">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-slate-800">
+                                {soal.bentukSoal}
+                              </span>
+                              <span aria-hidden="true">·</span>
+                              <span>{soal.elemen}</span>
+                              <span aria-hidden="true">·</span>
+                              <span className="font-mono text-emerald-800">
+                                {soal.levelCode} / {soal.taksonomiBloom}
+                              </span>
+                            </div>
+                            <span className="font-mono">Kisi-Kisi #{soal.blueprintNo}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed">
+                          <span className="font-semibold shrink-0 w-5">{displayNum}.</span>
+                          <div className="flex-1 space-y-2 min-w-0">
+                            {renderStructuredStimulus(soal.stimulus)}
                             <p className="whitespace-pre-line text-justify">{soal.pertanyaan}</p>
                           </div>
                         </div>
@@ -1263,8 +1391,8 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
                               className="py-3 px-3 text-slate-900 space-y-2 leading-relaxed align-top"
                             >
                               {soal.stimulus && (
-                                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 whitespace-pre-line">
-                                  {soal.stimulus}
+                                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800">
+                                  {renderStructuredStimulus(soal.stimulus)}
                                 </div>
                               )}
                               <div className="font-medium whitespace-pre-line">

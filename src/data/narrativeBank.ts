@@ -561,8 +561,8 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
       indikatorTopik: 'mengartikan penggalan ayat bergaris bawah pada Q.S. Al-Hujurat/49: 13 tentang tujuan penciptaan manusia yang beragam',
       cpRingkas: 'Murid memahami pesan pokok Q.S. Al-Hujurat/49: 13 tentang keragaman manusia untuk saling mengenal.',
       stimulus:
-        'Perhatikan penggalan Q.S. Al-Hujurat/49: 13 yang bergaris bawah berikut!\n"Wa ja\'alnakum syu\'uban wa qaba\'ila [lita\'arafu] — Inna akramakum \'indallahi atqakum."',
-      pertanyaanPG: 'Arti yang tepat untuk penggalan ayat yang diberi tanda kurung/garis bawah [lita\'arafu] di atas adalah ....',
+        'Perhatikan potongan Q.S. Al-Hujurat/49: 13 berikut!\nيَا أَيُّهَا النَّاسُ إِنَّا خَلَقْنَاكُمْ مِنْ ذَكَرٍ وَأُنْثَىٰ وَجَعَلْنَاكُمْ شُعُوبًا وَقَبَائِلَ لِتَعَارَفُوا ۚ إِنَّ أَكْرَمَكُمْ عِنْدَ اللَّهِ أَتْقَاكُمْ ۚ إِنَّ اللَّهَ عَلِيمٌ خَبِيرٌ\n"Wa ja\'alnakum syu\'uban wa qaba\'ila [lita\'arafu] — Inna akramakum \'indallahi atqakum."',
+      pertanyaanPG: 'Arti yang tepat untuk penggalan ayat lita\'arafu (لِتَعَارَفُوا) pada Q.S. Al-Hujurat/49: 13 di atas adalah ....',
       opsiPG: {
         A: 'Agar kalian saling mengenal dan menghargai satu sama lain',
         B: 'Agar kalian saling berlomba mengumpulkan harta kekayaan',
@@ -589,12 +589,12 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
         { premis: 'Sikap terhadap teman yang berbeda suku daerah', respon: 'Berteman dengan rukun tanpa membeda-bedakan' },
       ],
       pertanyaanIsian:
-        'Di hadapan Allah Swt., orang yang paling mulia di antara manusia bukanlah yang paling kaya atau paling bagus rupanya, melainkan orang yang paling ....................................................',
+        'Di hadapan Allah Swt., orang yang paling mulia di antara manusia bukanlah yang paling kaya atau paling bagus rupanya, melainkan orang yang paling ....',
       kunciIsian: 'bertakwa',
       pertanyaanUraian:
-        'Tuliskan 2 contoh kegiatan di sekolah yang dapat mempererat persahabatan antarmurid yang berbeda suku dan budaya!',
+        'Tuliskan arti dari potongan ayat "Inna akramakum \'indallahi atqakum" beserta 2 contoh pengamalannya dalam pergaulan di sekolah!',
       kunciUraian:
-        '1. Mengerjakan tugas piket kelas dan belajar kelompok secara bergiliran dengan semua teman.\n2. Mengadakan pentas seni atau berbagi cerita makanan khas daerah masing-masing dengan penuh rasa bangga.',
+        '1. Artinya: "Sesungguhnya yang paling mulia di antara kamu di sisi Allah ialah orang yang paling bertakwa."\n2. Contoh pengamalan: (a) Berteman dengan semua murid tanpa memandang suku atau kekayaan; (b) Berbuat jujur, rajin beribadah, dan menghormati sesama teman.',
       pembahasan:
         'Q.S. Al-Hujurat/49: 13 mengajarkan bahwa perbedaan suku dan bangsa adalah ciptaan Allah agar manusia saling mengenal (lita\'arafu), dan yang paling mulia di sisi-Nya adalah yang paling bertakwa.',
       dalil: 'Q.S. Al-Hujurat/49: 13 — Saling Mengenal dalam Keberagaman',
@@ -606,7 +606,7 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
       indikatorTopik: 'menganalisis pasangan Asmaul Husna dan contoh perilaku sehari-hari yang tepat pada tabel',
       cpRingkas: 'Murid memahami makna Asmaul Husna Al-Qawiyyu, Al-Qayyum, Al-Muhyi, dan Al-Mumit serta meneladaninya dalam perilaku.',
       stimulus:
-        'Perhatikan tabel pasangan Asmaul Husna dan perilaku sehari-hari berikut!\n| Kode | Asmaul Husna | Contoh Perilaku Murid Sehari-hari |\n| 1 | Al-Qayyum (Maha Mandiri) | Merapikan tempat tidur dan menyiapkan buku pelajaran sendiri tanpa menyuruh orang lain |\n| 2 | Al-Qawiyyu (Maha Kuat) | Menggunakan tenaga fisik untuk menakut-nakuti teman yang bertubuh kecil |\n| 3 | Al-Muhyi (Maha Menghidupkan) | Menyiram tanaman di taman kelas secara rutin agar tumbuh subur |',
+        'Perhatikan tabel berikut!\n| Kode | Asmaul Husna | Contoh Perilaku Murid Sehari-hari |\n| 1 | Al-Qayyum (Maha Mandiri) | Merapikan tempat tidur dan menyiapkan buku pelajaran sendiri tanpa menyuruh orang lain |\n| 2 | Al-Qawiyyu (Maha Kuat) | Menggunakan tenaga fisik untuk menakut-nakuti teman yang bertubuh kecil |\n| 3 | Al-Muhyi (Maha Menghidupkan) | Menyiram tanaman di taman kelas secara rutin agar tumbuh subur |',
       pertanyaanPG: 'Berdasarkan tabel di atas, pasangan Asmaul Husna dan perilaku keteladanan yang benar ditunjukkan oleh nomor ....',
       opsiPG: {
         A: 'Nomor 1 dan 2',
@@ -634,12 +634,12 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
         { premis: 'Al-Muhyi (Allah Maha Menghidupkan)', respon: 'Merawat tanaman di halaman sekolah agar tidak layu' },
       ],
       pertanyaanIsian:
-        'Asmaul Husna yang memiliki arti bahwa Allah Swt. Maha Mandiri dan tidak membutuhkan bantuan makhluk-Nya adalah ....................................................',
+        'Asmaul Husna yang memiliki arti bahwa Allah Swt. Maha Mandiri dan tidak membutuhkan bantuan makhluk-Nya adalah ....',
       kunciIsian: 'Al-Qayyum',
       pertanyaanUraian:
-        'Tuliskan 2 contoh sikap mandiri di rumah dan di sekolah sebagai bukti kamu meneladani Asmaul Husna Al-Qayyum!',
+        'Jelaskan 3 contoh sikap mandiri seorang murid di rumah dan di sekolah sebagai wujud meneladani Asmaul Husna Al-Qayyum!',
       kunciUraian:
-        '1. Di rumah: Merapikan tempat tidur dan menyiapkan seragam sekolah sendiri.\n2. Di sekolah: Mengerjakan tugas dan ulangan secara jujur dengan kemampuan sendiri.',
+        '1. Merapikan tempat tidur dan menyiapkan perlengkapan sekolah sendiri setiap malam.\n2. Mencuci piring makan sendiri tanpa membebani orang tua.\n3. Mengerjakan tugas dan ujian sekolah dengan jujur tanpa menyontek.',
       pembahasan:
         'Nomor 1 benar (Al-Qayyum diteladani dengan sikap mandiri) dan Nomor 3 benar (Al-Muhyi diteladani dengan memelihara kehidupan tumbuhan). Nomor 2 salah karena kekuatan harus digunakan untuk menolong yang lemah, bukan menindas.',
       dalil: 'Q.S. Al-Baqarah/2: 255 (Ayat Kursi — Al-Hayyu Al-Qayyum)',
@@ -651,8 +651,8 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
       indikatorTopik: 'menganalisis daftar pernyataan berangka (1)–(4) tentang contoh takdir muallaq dan ikhtiar',
       cpRingkas: 'Murid memahami makna iman kepada Hari Akhir serta Qada dan Qadar yang mendorong semangat berikhtiar.',
       stimulus:
-        'Perhatikan daftar pernyataan berikut!\n(1) Bima belajar dengan tekun setiap malam agar memperoleh nilai rapor yang memuaskan.\n(2) Jenis kelamin bayi laki-laki atau perempuan ketika dilahirkan ke dunia.\n(3) Pak Ahmad rajin berolahraga dan makan sayur agar tubuhnya tetap sehat dan bugar.\n(4) Matahari terbit dari sebelah timur dan tenggelam di sebelah barat.',
-      pertanyaanPG: 'Berdasarkan daftar pernyataan di atas, contoh takdir muallaq (ketentuan Allah yang berkaitan dengan ikhtiar/usaha manusia) ditunjukkan oleh nomor ....',
+        'Perhatikan beberapa pernyataan berikut!\n(1) Bima belajar dengan tekun setiap malam agar memperoleh nilai rapor yang memuaskan.\n(2) Jenis kelamin bayi laki-laki atau perempuan ketika dilahirkan ke dunia.\n(3) Pak Ahmad rajin berolahraga dan makan sayur agar tubuhnya tetap sehat dan bugar.\n(4) Matahari terbit dari sebelah timur dan tenggelam di sebelah barat.',
+      pertanyaanPG: 'Berdasarkan beberapa pernyataan di atas, contoh takdir muallaq (ketentuan Allah yang berkaitan dengan ikhtiar/usaha manusia) ditunjukkan oleh nomor ....',
       opsiPG: {
         A: '(1) dan (2)',
         B: '(1) dan (3)',
@@ -725,12 +725,12 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
         { premis: 'Sebutan bagi orang yang berhak menerima zakat', respon: 'Mustahik' },
       ],
       pertanyaanIsian:
-        'Apabila seseorang menyerahkan beras zakat fitrah setelah selesai pelaksanaan salat Idulfitri, maka pemberian tersebut dinilai sebagai .................... biasa.',
-      kunciIsian: 'sedekah',
+        'Apabila seseorang menyerahkan beras zakat fitrah setelah selesai pelaksanaan salat Idulfitri, maka pemberian tersebut dinilai sebagai ....',
+      kunciIsian: 'sedekah biasa',
       pertanyaanUraian:
-        'Mengapa zakat fitrah wajib dibayarkan menggunakan makanan pokok yang bagus dan layak dikonsumsi sehari-hari? Jelaskan alasanmu!',
+        'Hitunglah jumlah zakat fitrah yang wajib dikeluarkan keluarga Pak Rahmat (5 jiwa × 2,5 kg beras) dan jelaskan 3 hikmah menunaikan zakat fitrah sebelum salat Idulfitri!',
       kunciUraian:
-        'Karena zakat fitrah diberikan untuk membahagiakan fakir miskin di Hari Raya Idulfitri, dan dalam Islam kita diperintahkan menginfakkan harta yang baik, bukan yang buruk atau rusak.',
+        '1. Perhitungan: 5 jiwa × 2,5 kg beras = 12,5 kg beras.\n2. Tiga hikmah zakat fitrah: (a) Menyucikan jiwa orang yang berpuasa dari perbuatan sia-sia; (b) Membahagiakan fakir miskin di Hari Raya Idulfitri; (c) Menumbuhkan rasa syukur dan kepedulian sosial.',
       pembahasan:
         '5 jiwa × 2,5 kg beras = 12,5 kg beras. Zakat fitrah berfungsi menyucikan jiwa orang yang berpuasa (thuhratan lish-shaim) dan memberi kecukupan makanan bagi kaum miskin pada hari raya.',
       dalil: 'Hadis Ibnu Abbas r.a. tentang Zakat Fitrah (HR. Abu Dawud dan Ibnu Majah)',
@@ -826,14 +826,16 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
   'Fase D': [
     {
       elemen: 'Al-Qur\'an dan Hadis',
-      indikatorTopik: 'menerapkan sikap tabayyun terhadap pesan berantai bohong (hoaks) di grup WhatsApp kelas',
+      materiPokok: 'Sikap Tabayyun dalam Menerima Informasi (Q.S. Al-Hujurat/49: 6)',
+      stimulusModel: 'Model A: Penggalan Ayat/Hadis Bergaris Bawah',
+      indikatorTopik: 'menerapkan sikap tabayyun terhadap pesan berantai bohong (hoaks) berdasarkan Q.S. Al-Hujurat/49: 6',
       cpRingkas: 'Murid memahami kandungan Q.S. Al-Hujurat/49: 6 tentang tabayyun dan menolak penyebaran hoaks.',
       stimulus:
-        'Sebuah pesan berantai yang menjelek-jelekkan salah satu teman kelas tersebar di grup chat. Fikri membaca pesan itu dan tahu bahwa kabar tersebut bohong.',
-      pertanyaanPG: 'Tindakan paling tepat yang harus dilakukan Fikri pada situasi tersebut adalah ....',
+        'Perhatikan potongan Q.S. Al-Hujurat/49: 6 berikut!\nيَا أَيُّهَا الَّذِينَ آمَنُوا إِنْ جَاءَكُمْ فَاسِقٌ بِنَبَإٍ فَتَبَيَّنُوا أَنْ تُصِيبُوا قَوْمًا بِجَهَالَةٍ فَتُصْبِحُوا عَلَىٰ مَا فَعَلْتُمْ نَادِمِينَ\nSebuah pesan berantai yang menjelek-jelekkan salah satu teman kelas tersebar di grup chat. Fikri membaca pesan itu dan tahu bahwa kabar tersebut belum jelas kebenarannya.',
+      pertanyaanPG: 'Berdasarkan ayat di atas, tindakan paling tepat yang harus dilakukan Fikri adalah ....',
       opsiPG: {
         A: 'Meneruskan pesan itu ke grup kelas lain agar semakin banyak yang membaca',
-        B: 'Menghentikan penyebaran pesan tersebut dan menyampaikan kebenarannya secara santun',
+        B: 'Menghentikan penyebaran pesan tersebut dan melakukan tabayyun (klarifikasi) secara santun',
         C: 'Ikut memberikan komentar ejekan supaya terlihat kompak dengan pengirim pesan',
         D: 'Menyimpan tangkapan layar pesan bohong itu untuk mengancam teman yang bersangkutan',
       },
@@ -857,12 +859,12 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
         { premis: 'Menuduh orang lain melakukan kesalahan tanpa bukti yang benar', respon: 'Fitnah (Buhtan)' },
       ],
       pertanyaanIsian:
-        'Sikap memeriksa dan meneliti kebenaran suatu berita terlebih dahulu agar tidak menimbulkan penyesalan sebagaimana diperintahkan dalam Q.S. Al-Hujurat ayat 6 disebut ....................................................',
+        'Sikap memeriksa dan meneliti kebenaran suatu berita terlebih dahulu agar tidak menimbulkan penyesalan sebagaimana diperintahkan dalam Q.S. Al-Hujurat ayat 6 disebut ....',
       kunciIsian: 'tabayyun',
       pertanyaanUraian:
-        'Mengapa menyebarkan kabar bohong (hoaks) tentang teman di grup WhatsApp dapat merusak persaudaraan kelas, dan bagaimana cara Fikri menasihati temannya yang mengirim pesan tersebut?',
+        'Tuliskan arti dari perintah "fatabayyanu" (فَتَبَيَّنُوا) dalam Q.S. Al-Hujurat/49: 6 dan jelaskan bagaimana sikap yang seharusnya dilakukan Fikri terhadap temannya yang mengirim pesan hoaks tersebut!',
       kunciUraian:
-        '1. Karena kabar bohong merupakan fitnah yang merusak nama baik korban, menimbulkan rasa saling curiga, dan memecah belah pertemanan.\n2. Fikri dapat menghubungi pengirim pesan secara pribadi dengan bahasa sopan, menjelaskan fakta sebenarnya, dan memintanya menghapus pesan tersebut dari grup.',
+        '1. Arti "fatabayyanu": Maka telitilah / periksalah dengan saksama kebenarannya.\n2. Sikap Fikri: Menghubungi pengirim pesan secara pribadi dengan bahasa sopan, menjelaskan fakta sebenarnya, dan memintanya menghapus pesan tersebut dari grup.',
       pembahasan:
         'Q.S. Al-Hujurat/49: 6 memerintahkan umat Islam melakukan tabayyun (klarifikasi) dan melarang menyebarkan berita dusta yang merugikan kehormatan sesama.',
       dalil: 'Q.S. Al-Hujurat/49: 6 — Kewajiban Tabayyun dalam Menerima Informasi',
@@ -1500,7 +1502,7 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
 
 /**
  * Selects a distinct, age-appropriate narrative seed for a given Fase, Elemen, and Question Number,
- * guaranteeing that no two questions in the same assessment package ever share the same stimulus text.
+ * WITHOUT ever prepending any static prefix or template sentence to the stimulus.
  */
 export function selectDistinctNarrativeSeed(
   fase: FaseCode,
@@ -1525,43 +1527,16 @@ export function selectDistinctNarrativeSeed(
     return chosen;
   }
 
+  // Fallback across all phases without ever adding any static template prefix
+  const allSeeds = Object.values(FASE_NARRATIVE_BANK).flat();
+  const anyUnusedGlobal = allSeeds.filter((s) => !usedStimuli.has(s.stimulus));
+  if (anyUnusedGlobal.length > 0) {
+    const chosen = anyUnusedGlobal[questionIndex % anyUnusedGlobal.length];
+    usedStimuli.add(chosen.stimulus);
+    return chosen;
+  }
+
   const base = bank[questionIndex % bank.length];
-  const protagonistPool =
-    fase === 'Fase A'
-      ? ['Zaid', 'Aisyah', 'Umar', 'Fatimah', 'Bilal', 'Salma']
-      : fase === 'Fase B'
-      ? ['Rafi', 'Zahra', 'Ilham', 'Nadia', 'Fauzan', 'Syifa']
-      : fase === 'Fase C'
-      ? ['Bagas', 'Kirana', 'Damar', 'Laras', 'Fadhil', 'Alya']
-      : fase === 'Fase D'
-      ? ['Rizky', 'Salsa', 'Dimas', 'Aulia', 'Hafiz', 'Putri']
-      : ['Naufal', 'Annisa', 'Rangga', 'Shafira', 'Iqbal', 'Yasmin'];
-
-  const timeSettingPool =
-    fase === 'Fase A'
-      ? ['Hari Senin pagi,', 'Sepulang sekolah,', 'Di ruang keluarga,', 'Saat bermain di taman,']
-      : fase === 'Fase B' || fase === 'Fase C'
-      ? [
-          'Pada hari Selasa pagi di sekolah,',
-          'Ketika kegiatan ekstrakurikuler berlangsung,',
-          'Saat akhir pekan di lingkungan rumah,',
-          'Menjelang jam pulang sekolah,',
-        ]
-      : [
-          'Dalam kegiatan diskusi organisasi murid pekan ini,',
-          'Pada suatu sore sepulang kegiatan belajar tambahan,',
-          'Ketika mengikuti kegiatan bakti sosial lintas kelas,',
-          'Saat mempersiapkan proyek karya ilmiah remaja,',
-        ];
-
-  const charName = protagonistPool[questionIndex % protagonistPool.length];
-  const settingPrefix =
-    timeSettingPool[Math.floor(questionIndex / bank.length) % timeSettingPool.length];
-  const uniqueStimulus = `${settingPrefix} ${charName} mengalami peristiwa serupa: ${base.stimulus}`;
-  usedStimuli.add(uniqueStimulus);
-
-  return {
-    ...base,
-    stimulus: uniqueStimulus,
-  };
+  return { ...base };
 }
+

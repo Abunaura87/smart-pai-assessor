@@ -282,3 +282,61 @@ test('Rich HTML, Plain Text fallback, and Word .doc export contain zero raw Mark
   assert.ok(syncedHtml.includes('198908172019031008'));
 });
 
+test('Stimulus parser converts pipe tables into HTML tables, detects vocalized Arabic verses, and separates Isian Singkat from Uraian', async () => {
+  const { parseStimulusSegments, renderStimulusHtmlString } = await import('./stimulusParser');
+
+  const tableStimulus =
+    'Perhatikan tabel berikut!\n| Kode | Asmaul Husna | Contoh Perilaku Murid Sehari-hari |\n| 1 | Al-Qayyum (Maha Mandiri) | Merapikan tempat tidur sendiri |\n| 2 | Al-Muhyi (Maha Menghidupkan) | Menyiram tanaman secara rutin |';
+  const segments = parseStimulusSegments(tableStimulus);
+  assert.equal(segments.length, 2);
+  assert.equal(segments[0].type, 'text');
+  assert.equal(segments[1].type, 'table');
+  if (segments[1].type === 'table') {
+    assert.deepEqual(segments[1].headers, [
+      'Kode',
+      'Asmaul Husna',
+      'Contoh Perilaku Murid Sehari-hari',
+    ]);
+    assert.equal(segments[1].rows.length, 2);
+  }
+
+  const tableHtml = renderStimulusHtmlString(tableStimulus);
+  assert.ok(tableHtml.includes('<table'), 'Pipe table must render as HTML <table>');
+  assert.ok(tableHtml.includes('<th'), 'Pipe table must render <th> headers');
+  assert.equal(tableHtml.includes('| Kode |'), false, 'Raw pipe syntax must not remain in HTML');
+
+  const arabicStimulus =
+    'Perhatikan potongan Q.S. Al-Hujurat/49: 13 berikut!\nيَا أَيُّهَا النَّاسُ إِنَّا خَلَقْنَاكُمْ مِنْ ذَكَرٍ وَأُنْثَىٰ وَجَعَلْنَاكُمْ شُعُوبًا وَقَبَائِلَ لِتَعَارَفُوا';
+  const arabicSegs = parseStimulusSegments(arabicStimulus);
+  assert.ok(arabicSegs.some((s) => s.type === 'arabic'), 'Must detect vocalized Arabic text segment');
+  const arabicHtml = renderStimulusHtmlString(arabicStimulus);
+  assert.ok(arabicHtml.includes('dir="rtl"'), 'Arabic verse must render with dir="rtl"');
+
+  // Verify zero static prefix template ("mengalami peristiwa serupa") even on large question sets
+  const largePkg = buildCustomFallbackPackage({
+    ...PRESET_PACKAGES[2].parameters,
+    bentukSoalCounts: [
+      { bentuk: 'Pilihan Ganda', jumlah: 6 },
+      { bentuk: 'Isian Singkat', jumlah: 3 },
+      { bentuk: 'Uraian', jumlah: 3 },
+    ],
+  });
+  for (const soal of largePkg.butirSoal) {
+    assert.equal(
+      soal.stimulus.includes('mengalami peristiwa serupa'),
+      false,
+      'Must never prepend static prefix "mengalami peristiwa serupa"'
+    );
+  }
+
+  // Verify Isian Singkat and Uraian are separated into B. Isian Singkat and C. Uraian
+  const kop = getDefaultKopConfig(largePkg);
+  const html = buildRichDocumentHtml(largePkg, kop);
+  const plain = buildPlainTextWithoutMarkdown(largePkg, kop);
+  assert.ok(html.includes('B. Isian Singkat'), 'HTML must have B. Isian Singkat section');
+  assert.ok(html.includes('C. Uraian'), 'HTML must have C. Uraian section when Isian Singkat is present');
+  assert.ok(plain.includes('B. Isian Singkat'), 'Plain text must have B. Isian Singkat section');
+  assert.ok(plain.includes('C. Uraian'), 'Plain text must have C. Uraian section');
+});
+
+

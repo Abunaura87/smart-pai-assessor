@@ -64,7 +64,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         capaianTujuanPembelajaran:
           'Menerapkan adab berkomunikasi di media sosial serta menghindari ghibah, fitnah, dan perundungan siber (cyberbullying).',
         indikatorSoalABCD:
-          'Disajikan narasi kasus seorang siswa yang menerima foto editan temannya di grup kelas (Condition), murid (Audience) dapat menentukan tindakan yang mencerminkan akhlak karimah dan pencegahan perundungan dengan tepat (Behavior & Degree).',
+          'Disajikan narasi kasus seorang murid yang menerima foto editan temannya di grup kelas (Condition), murid (Audience) dapat menentukan tindakan yang mencerminkan akhlak karimah dan pencegahan perundungan dengan tepat (Behavior & Degree).',
         levelKognitif: 'L2 (C3 - Menerapkan)',
         bentukSoal: 'Pilihan Ganda',
         levelCode: 'L2',
@@ -100,7 +100,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         capaianTujuanPembelajaran:
           'Mengevaluasi perilaku sehari-hari berdasarkan kandungan Q.S. Al-Hujurat/49: 11–12 tentang larangan mengolok-olok dan berprasangka buruk.',
         indikatorSoalABCD:
-          'Disajikan tiga pernyataan kasus interaksi antar siswa di lingkungan sekolah (Condition), murid (Audience) dapat menilai kebenaran setiap pernyataan berdasarkan adab pergaulan Islam dalam Q.S. Al-Hujurat/49: 11–12 secara tepat (Behavior & Degree).',
+          'Disajikan tiga pernyataan kasus interaksi antarmurid di lingkungan sekolah (Condition), murid (Audience) dapat menilai kebenaran setiap pernyataan berdasarkan adab pergaulan Islam dalam Q.S. Al-Hujurat/49: 11–12 secara tepat (Behavior & Degree).',
         levelKognitif: 'L2 (C3 - Menerapkan / AKM)',
         levelCode: 'L2',
         bentukSoal: 'Benar/Salah',
@@ -112,7 +112,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         capaianTujuanPembelajaran:
           'Merumuskan solusi konkret berbasis nilai Islam dan moderasi beragama untuk mengatasi kasus perundungan (bullying) di sekolah.',
         indikatorSoalABCD:
-          'Disajikan kasus dilema moral tentang seorang siswa baru yang dikucilkan karena perbedaan logat daerah di kelas (Condition), murid (Audience) dapat merumuskan tiga langkah penyelesaian berbasis nilai tasamuh dan ukhuwah beserta landasan dalilnya secara sistematis (Behavior & Degree).',
+          'Disajikan kasus dilema moral tentang seorang murid baru yang dikucilkan karena perbedaan logat daerah di kelas (Condition), murid (Audience) dapat merumuskan tiga langkah penyelesaian berbasis nilai tasamuh dan ukhuwah beserta landasan dalilnya secara sistematis (Behavior & Degree).',
         levelKognitif: 'L3 (C5 - Mengevaluasi / HOTS)',
         levelCode: 'L3',
         bentukSoal: 'Uraian',
@@ -129,9 +129,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         taksonomiBloom: 'C2 (Memahami)',
         indikatorRef: 'Mengidentifikasi sikap tabayyun saat menerima kabar bohong di grup kelas.',
         stimulus:
-          'Sebuah pesan berantai yang menjelek-jelekkan salah satu teman kelas tersebar di grup chat. Fikri membaca pesan itu dan tahu bahwa kabar tersebut bohong.',
+          'Perhatikan potongan Q.S. Al-Hujurat/49: 6 berikut!\nيَا أَيُّهَا الَّذِينَ آمَنُوا إِنْ جَاءَكُمْ فَاسِقٌ بِنَبَإٍ فَتَبَيَّنُوا أَنْ تُصِيبُوا قَوْمًا بِجَهَالَةٍ فَتُصْبِحُوا عَلَىٰ مَا فَعَلْتُمْ نَادِمِينَ\nSebuah pesan berantai yang menjelek-jelekkan salah satu teman kelas tersebar di grup chat. Fikri membaca pesan itu dan tahu bahwa kabar tersebut bohong.',
         pertanyaan:
-          'Tindakan paling tepat yang harus dilakukan Fikri setelah membaca pesan tersebut adalah ....',
+          'Berdasarkan ayat di atas, tindakan paling tepat yang harus dilakukan Fikri setelah membaca pesan tersebut adalah ....',
         opsi: [
           {
             label: 'A',
@@ -1083,9 +1083,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         taksonomiBloom: 'C2 (Memahami)',
         indikatorRef: 'Mengartikan penggalan ayat bergaris bawah [lita\'arafu] pada Q.S. Al-Hujurat/49: 13.',
         stimulus:
-          'Perhatikan penggalan Q.S. Al-Hujurat/49: 13 yang bergaris bawah berikut!\n"Wa ja\'alnakum syu\'uban wa qaba\'ila [lita\'arafu] — Inna akramakum \'indallahi atqakum."',
+          'Perhatikan potongan Q.S. Al-Hujurat/49: 13 berikut!\nيَا أَيُّهَا النَّاسُ إِنَّا خَلَقْنَاكُمْ مِنْ ذَكَرٍ وَأُنْثَىٰ وَجَعَلْنَاكُمْ شُعُوبًا وَقَبَائِلَ لِتَعَارَفُوا ۚ إِنَّ أَكْرَمَكُمْ عِنْدَ اللَّهِ أَتْقَاكُمْ ۚ إِنَّ اللَّهَ عَلِيمٌ خَبِيرٌ\n"Wa ja\'alnakum syu\'uban wa qaba\'ila [lita\'arafu] — Inna akramakum \'indallahi atqakum."',
         pertanyaan:
-          'Arti yang tepat untuk penggalan ayat yang diberi garis bawah [lita\'arafu] di atas adalah ....',
+          'Arti yang tepat untuk penggalan ayat lita\'arafu (لِتَعَارَفُوا) pada Q.S. Al-Hujurat/49: 13 di atas adalah ....',
         opsi: [
           { label: 'A', teks: 'Agar kalian saling mengenal dan menghargai satu sama lain' },
           { label: 'B', teks: 'Agar kalian saling berlomba mengumpulkan harta kekayaan' },
@@ -1135,7 +1135,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         taksonomiBloom: 'C3 (Menerapkan)',
         indikatorRef: 'Menentukan pasangan Asmaul Husna dan contoh perilaku sehari-hari yang tepat pada tabel.',
         stimulus:
-          'Perhatikan tabel pasangan Asmaul Husna dan perilaku sehari-hari berikut!\n| Kode | Asmaul Husna | Contoh Perilaku Murid Sehari-hari |\n| 1 | Al-Qayyum (Maha Mandiri) | Merapikan tempat tidur dan menyiapkan buku pelajaran sendiri |\n| 2 | Al-Qawiyyu (Maha Kuat) | Menggunakan tenaga fisik untuk menakut-nakuti teman yang kecil |\n| 3 | Al-Muhyi (Maha Menghidupkan) | Menyiram tanaman di taman kelas secara rutin agar tumbuh subur |',
+          'Perhatikan tabel berikut!\n| Kode | Asmaul Husna | Contoh Perilaku Murid Sehari-hari |\n| 1 | Al-Qayyum (Maha Mandiri) | Merapikan tempat tidur dan menyiapkan buku pelajaran sendiri |\n| 2 | Al-Qawiyyu (Maha Kuat) | Menggunakan tenaga fisik untuk menakut-nakuti teman yang kecil |\n| 3 | Al-Muhyi (Maha Menghidupkan) | Menyiram tanaman di taman kelas secara rutin agar tumbuh subur |',
         pertanyaan:
           'Berdasarkan tabel di atas, pasangan Asmaul Husna dan perilaku keteladanan yang benar ditunjukkan oleh nomor ....',
         opsi: [
@@ -1161,9 +1161,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         taksonomiBloom: 'C4 (Menganalisis)',
         indikatorRef: 'Menganalisis contoh takdir muallaq dari daftar pernyataan berangka (1)–(4).',
         stimulus:
-          'Perhatikan daftar pernyataan berikut!\n(1) Bima belajar dengan tekun setiap malam agar memperoleh nilai rapor yang memuaskan.\n(2) Jenis kelamin bayi laki-laki atau perempuan ketika dilahirkan ke dunia.\n(3) Pak Ahmad rajin berolahraga dan makan sayur agar tubuhnya tetap sehat dan bugar.\n(4) Matahari terbit dari sebelah timur dan tenggelam di sebelah barat.',
+          'Perhatikan beberapa pernyataan berikut!\n(1) Bima belajar dengan tekun setiap malam agar memperoleh nilai rapor yang memuaskan.\n(2) Jenis kelamin bayi laki-laki atau perempuan ketika dilahirkan ke dunia.\n(3) Pak Ahmad rajin berolahraga dan makan sayur agar tubuhnya tetap sehat dan bugar.\n(4) Matahari terbit dari sebelah timur dan tenggelam di sebelah barat.',
         pertanyaan:
-          'Berdasarkan daftar pernyataan di atas, contoh takdir muallaq (ketentuan Allah yang berkaitan dengan ikhtiar manusia) ditunjukkan oleh nomor ....',
+          'Berdasarkan beberapa pernyataan di atas, contoh takdir muallaq (ketentuan Allah yang berkaitan dengan ikhtiar manusia) ditunjukkan oleh nomor ....',
         opsi: [
           { label: 'A', teks: '(1) dan (2)' },
           { label: 'B', teks: '(1) dan (3)' },
@@ -1187,9 +1187,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         taksonomiBloom: 'C4 (Menganalisis)',
         indikatorRef: 'Menjelaskan ukuran kemuliaan manusia menurut Q.S. Al-Hujurat/49: 13 dan contoh penerapannya.',
         stimulus:
-          'Di akhir Q.S. Al-Hujurat/49: 13, Allah Swt. menegaskan: "Sesungguhnya yang paling mulia di antara kamu di sisi Allah ialah orang yang paling bertakwa."',
+          'Perhatikan potongan Q.S. Al-Hujurat/49: 13 berikut!\nإِنَّ أَكْرَمَكُمْ عِنْدَ اللَّهِ أَتْقَاكُمْ ۚ إِنَّ اللَّهَ عَلِيمٌ خَبِيرٌ\n"Sesungguhnya yang paling mulia di antara kamu di sisi Allah ialah orang yang paling bertakwa."',
         pertanyaan:
-          'Berdasarkan penggalan ayat tersebut:\na) Mengapa kita tidak boleh menyombongkan kekayaan keluarga atau asal suku kepada teman di sekolah?\nb) Tuliskan 2 (dua) contoh sikap anak yang bertakwa dalam pergaulan sehari-hari di sekolah!',
+          'Tuliskan arti dari potongan ayat "Inna akramakum \'indallahi atqakum" dan jelaskan 2 (dua) contoh sikap anak yang bertakwa dalam pergaulan sehari-hari di sekolah!',
         kunciJawaban:
           'a) Karena di hadapan Allah Swt. semua manusia setara; kemuliaan seseorang tidak diukur dari kekayaan, rupa, atau sukunya, melainkan dari ketakwaan dan amal salehnya.\nb) Dua contoh sikap: (1) Berteman dengan siapa saja secara adil tanpa pilih kasih; (2) Rajin beribadah, berkata jujur, dan gemar membantu teman yang kesulitan.',
         pembahasanSingkat:
