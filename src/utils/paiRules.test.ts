@@ -255,5 +255,30 @@ test('Rich HTML, Plain Text fallback, and Word .doc export contain zero raw Mark
     ]),
     '4-col'
   );
+
+  // Verify default signatory fields and custom signatory synchronization
+  assert.equal(kopKkg.tempatTanggalTandatangan, 'Lalembuu, .................... 2026');
+  assert.equal(kopKkg.jabatanKiri, 'Pengawas PAI');
+  assert.equal(kopKkg.namaPengawasPai, 'Seh Alwan, S.Ag., M.Pd.');
+  assert.equal(kopKkg.nipPengawasPai, '197101032000031007');
+  assert.equal(kopKkg.jabatanKanan, 'Guru Pendidikan Agama Islam');
+
+  const customSignatoryKop = {
+    ...kopKkg,
+    tempatTanggalTandatangan: 'Lalembuu, 15 Juni 2026',
+    jabatanKiri: 'Kepala Sekolah',
+    namaPengawasPai: 'H. Muhammad Ridwan, S.Pd., M.Pd.',
+    nipPengawasPai: '197504122001121003',
+    jabatanKanan: 'Guru Pendidikan Agama Islam',
+    namaGuruPai: 'Ahmad Fauzi, S.Pd.I., Gr.',
+    nipGuruPai: '198908172019031008',
+  };
+  const syncedHtml = buildRichDocumentHtml(pkg, customSignatoryKop);
+  assert.ok(syncedHtml.includes('Lalembuu, 15 Juni 2026'));
+  assert.ok(syncedHtml.includes('Kepala Sekolah'));
+  assert.ok(syncedHtml.includes('H. Muhammad Ridwan, S.Pd., M.Pd.'));
+  assert.ok(syncedHtml.includes('197504122001121003'));
+  assert.ok(syncedHtml.includes('Ahmad Fauzi, S.Pd.I., Gr.'));
+  assert.ok(syncedHtml.includes('198908172019031008'));
 });
 

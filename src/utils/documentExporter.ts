@@ -92,12 +92,47 @@ export function getDefaultKopConfig(pkg: AssessmentPackage): KopSoalConfig {
         ? 'SEKOLAH MENENGAH PERTAMA (SMP)'
         : 'SMA / SMK / MA',
     kabupatenKota: 'Kabupaten Konawe Selatan',
+    tempatTanggalTandatangan: 'Lalembuu, .................... 2026',
+    jabatanKiri: 'Pengawas PAI',
     namaPengawasPai: 'Seh Alwan, S.Ag., M.Pd.',
     nipPengawasPai: '197101032000031007',
+    jabatanKanan: 'Guru Pendidikan Agama Islam',
     namaGuruPai: '_____________________________',
     nipGuruPai: '............................................',
   };
 }
+
+export const KOP_STORAGE_KEY = 'smart_pai_kop_config_v1';
+
+export function loadKopConfigFromStorage(pkg: AssessmentPackage): KopSoalConfig {
+  const defaults = getDefaultKopConfig(pkg);
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(KOP_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<KopSoalConfig>;
+        return {
+          ...defaults,
+          ...parsed,
+        };
+      }
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+  return defaults;
+}
+
+export function saveKopConfigToStorage(kop: KopSoalConfig): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(KOP_STORAGE_KEY, JSON.stringify(kop));
+    }
+  } catch {
+    // Ignore storage write errors
+  }
+}
+
 
 export function getOptionColumnsMode(
   opsi?: QuestionOption[]
@@ -399,6 +434,22 @@ export function buildRichDocumentHtml(
               })
               .join('')}
           </tbody>
+        </table>
+        <table style="width:100%; border-collapse:collapse; border:none; margin-top:14pt; font-size:11pt;">
+          <tr>
+            <td style="width:50%; border:none; padding:4pt 16pt; vertical-align:top;">
+              <div>Mengetahui,</div>
+              <strong>${escapeHtml(kop.jabatanKiri || 'Pengawas PAI')}</strong><br/><br/><br/><br/>
+              <strong><u>${escapeHtml(kop.namaPengawasPai)}</u></strong><br/>
+              <strong>NIP. ${escapeHtml(kop.nipPengawasPai)}</strong>
+            </td>
+            <td style="width:50%; border:none; padding:4pt 16pt; vertical-align:top;">
+              <div>${escapeHtml(kop.tempatTanggalTandatangan || 'Lalembuu, .................... 2026')}</div>
+              <strong>${escapeHtml(kop.jabatanKanan || 'Guru Pendidikan Agama Islam')}</strong><br/><br/><br/><br/>
+              <strong><u>${escapeHtml(kop.namaGuruPai)}</u></strong><br/>
+              <strong>NIP. ${escapeHtml(kop.nipGuruPai)}</strong>
+            </td>
+          </tr>
         </table>
       </div>${pageBreakHtml}`
     : '';
@@ -930,14 +981,15 @@ export function buildRichDocumentHtml(
         <table style="width:100%; border-collapse:collapse; border:none; margin-top:14pt; font-size:11pt;">
           <tr>
             <td style="width:50%; border:none; padding:4pt 16pt; vertical-align:top;">
-              <strong>Pengawas PAI</strong><br/><br/><br/><br/>
-              <strong>${escapeHtml(kop.namaPengawasPai)}</strong><br/>
+              <div>Mengetahui,</div>
+              <strong>${escapeHtml(kop.jabatanKiri || 'Pengawas PAI')}</strong><br/><br/><br/><br/>
+              <strong><u>${escapeHtml(kop.namaPengawasPai)}</u></strong><br/>
               <strong>NIP. ${escapeHtml(kop.nipPengawasPai)}</strong>
             </td>
             <td style="width:50%; border:none; padding:4pt 16pt; vertical-align:top;">
-              ........................., .................................... 2026<br/>
-              <strong>Guru Pendidikan Agama Islam</strong><br/><br/><br/><br/>
-              <strong>${escapeHtml(kop.namaGuruPai)}</strong><br/>
+              <div>${escapeHtml(kop.tempatTanggalTandatangan || 'Lalembuu, .................... 2026')}</div>
+              <strong>${escapeHtml(kop.jabatanKanan || 'Guru Pendidikan Agama Islam')}</strong><br/><br/><br/><br/>
+              <strong><u>${escapeHtml(kop.namaGuruPai)}</u></strong><br/>
               <strong>NIP. ${escapeHtml(kop.nipGuruPai)}</strong>
             </td>
           </tr>

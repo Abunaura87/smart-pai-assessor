@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   AssessmentPackage,
-  DocumentLayoutMode,
   KopSoalConfig,
-  LogoPresetType,
 } from '../types/assessment';
 import {
   ELEMEN_DIMENSI_CINTA,
@@ -15,11 +13,11 @@ import {
   buildRichDocumentHtml,
   buildWordDocContent,
   formatKelasDisplay,
-  getDefaultKopConfig,
   getOptionColumnsMode,
   LOGO_PRESET_DATA_URLS,
   resolveLogoUrl,
 } from '../utils/documentExporter';
+import { KopPejabatForm } from './KopPejabatForm';
 import {
   Copy,
   Check,
@@ -29,39 +27,63 @@ import {
   Printer,
   Settings2,
   FileSpreadsheet,
-  Upload,
 } from 'lucide-react';
 
 interface AssessmentDocumentProps {
   pkg: AssessmentPackage;
+  kopConfig: KopSoalConfig;
+  onChangeKopConfig: (next: KopSoalConfig) => void;
+  onResetKopConfig: () => void;
+  onOpenKopModal: () => void;
   onPrint: () => void;
 }
 
 type UsSubTab = 'all' | 'cover' | 'berita-acara' | 'naskah' | 'ljk' | 'praktik';
 
-export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onPrint }) => {
+export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
+  pkg,
+  kopConfig,
+  onChangeKopConfig,
+  onResetKopConfig,
+  onOpenKopModal,
+  onPrint,
+}) => {
   const [studentSheetOnly, setStudentSheetOnly] = useState(false);
   const [showKopSettings, setShowKopSettings] = useState(false);
   const [showAllKartuSoal, setShowAllKartuSoal] = useState(false);
   const [copiedRichText, setCopiedRichText] = useState(false);
   const [highlightedBlueprintNo, setHighlightedBlueprintNo] = useState<number | null>(null);
-  const [kopConfig, setKopConfig] = useState<KopSoalConfig>(() => getDefaultKopConfig(pkg));
   const [usSubTab, setUsSubTab] = useState<UsSubTab>('all');
 
-  // Synchronize default Kop judul & layoutMode when assessment package changes
-  useEffect(() => {
-    const nextDefault = getDefaultKopConfig(pkg);
-    setKopConfig((prev) => ({
-      ...prev,
-      layoutMode: nextDefault.layoutMode,
-      barisKop2: nextDefault.barisKop2,
-      logoKananPreset:
-        prev.logoKananPreset === 'custom' ? 'custom' : nextDefault.logoKananPreset,
-      judulAsesmenDokumen: nextDefault.judulAsesmenDokumen,
-      waktuUjian: nextDefault.waktuUjian,
-      namaSekolah: nextDefault.namaSekolah,
-    }));
-  }, [pkg.id, pkg.parameters.jenisUjian, pkg.parameters.jenjang]);
+  const renderOfficialSignatureBlock = (sectionIdSuffix: string) => (
+    <div
+      data-testid={`signature-block-${sectionIdSuffix}`}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 mt-4 border-t border-slate-200 font-serif text-xs sm:text-sm text-black print-break-inside-avoid"
+    >
+      <div className="space-y-12 pl-2 sm:pl-6">
+        <div>
+          <div>Mengetahui,</div>
+          <div className="font-bold">{kopConfig.jabatanKiri || 'Pengawas PAI'}</div>
+        </div>
+        <div>
+          <div className="font-bold underline">{kopConfig.namaPengawasPai}</div>
+          <div className="font-bold">NIP. {kopConfig.nipPengawasPai}</div>
+        </div>
+      </div>
+      <div className="space-y-12 pl-2 sm:pl-6">
+        <div>
+          <div>{kopConfig.tempatTanggalTandatangan || 'Lalembuu, .................... 2026'}</div>
+          <div className="font-bold">
+            {kopConfig.jabatanKanan || 'Guru Pendidikan Agama Islam'}
+          </div>
+        </div>
+        <div>
+          <div className="font-bold underline">{kopConfig.namaGuruPai}</div>
+          <div className="font-bold">NIP. {kopConfig.nipGuruPai}</div>
+        </div>
+      </div>
+    </div>
+  );
 
   const defaultKelasSmt = formatKelasSemester(pkg.parameters.kelas, pkg.parameters.jenisUjian);
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
@@ -158,32 +180,6 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
     URL.revokeObjectURL(url);
   };
 
-  const handleUploadCustomLogo = (
-    side: 'kiri' | 'kanan',
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      if (side === 'kiri') {
-        setKopConfig((prev) => ({
-          ...prev,
-          logoKiriPreset: 'custom',
-          logoKiriCustomUrl: result,
-        }));
-      } else {
-        setKopConfig((prev) => ({
-          ...prev,
-          logoKananPreset: 'custom',
-          logoKananCustomUrl: result,
-        }));
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Compute Horizontal Answer Key Grid (4 columns side-by-side like official KKG / US sheets)
   const rowsPerKeyCol = Math.max(5, Math.ceil(pgAndObjektifSoal.length / 4));
 
@@ -205,6 +201,15 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={onOpenKopModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Settings2 className="w-3.5 h-3.5 text-emerald-800" />
+              <span>⚙️ Pengaturan Kop &amp; Pejabat</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowKopSettings((prev) => !prev)}
@@ -288,16 +293,18 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
             <button
               type="button"
               onClick={() =>
-                setKopConfig((prev) => ({
-                  ...prev,
+                onChangeKopConfig({
+                  ...kopConfig,
                   layoutMode: 'kkg',
                   barisKop2:
-                    prev.barisKop2 === 'DINAS PENDIDIKAN DAN KEBUDAYAAN'
+                    kopConfig.barisKop2 === 'DINAS PENDIDIKAN DAN KEBUDAYAAN'
                       ? 'KELOMPOK KERJA GURU (KKG). PAIBP'
-                      : prev.barisKop2,
+                      : kopConfig.barisKop2,
                   logoKananPreset:
-                    prev.logoKananPreset === 'tutwuri' ? 'kemenag' : prev.logoKananPreset,
-                }))
+                    kopConfig.logoKananPreset === 'tutwuri'
+                      ? 'kemenag'
+                      : kopConfig.logoKananPreset,
+                })
               }
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
                 kopConfig.layoutMode === 'kkg'
@@ -310,14 +317,14 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
             <button
               type="button"
               onClick={() =>
-                setKopConfig((prev) => ({
-                  ...prev,
+                onChangeKopConfig({
+                  ...kopConfig,
                   layoutMode: 'us',
                   barisKop2: 'DINAS PENDIDIKAN DAN KEBUDAYAAN',
                   judulAsesmenDokumen:
                     'UJIAN SEKOLAH ( US ) PENDIDIKAN AGAMA ISLAM DAN BUDI PEKERTI',
                   waktuUjian: '120 Menit',
-                }))
+                })
               }
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
                 kopConfig.layoutMode === 'us'
@@ -330,247 +337,14 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
           </div>
         </div>
 
-        {/* Collapsible Form Pengaturan Kustomisasi Kop Soal */}
+        {/* Collapsible Form Pengaturan Kustomisasi Kop Soal & Identitas Penandatangan */}
         {showKopSettings && (
-          <div className="pt-4 border-t border-slate-200 bg-slate-50/80 p-4 rounded-xl space-y-4 text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  Pengaturan Kustomisasi Kop Soal & Identitas Dokumen
-                </h3>
-                <p className="text-slate-600">
-                  Sesuaikan logo kiri/kanan, baris instansi kop surat, judul asesmen, dan nama
-                  pengawas/guru PAI sebelum cetak atau salin ke Word.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setKopConfig(getDefaultKopConfig(pkg))}
-                className="px-2.5 py-1 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer"
-              >
-                Reset ke Default KKG/Konawe Selatan
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Logo Kiri */}
-              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
-                <label className="block font-semibold text-slate-800">
-                  Opsi Logo Kiri (Default: Pemda Konawe Selatan)
-                </label>
-                <div className="flex items-center gap-3">
-                  {logoKiriUrl && (
-                    <img
-                      src={logoKiriUrl}
-                      alt="Pratinjau Logo Kiri"
-                      className="w-10 h-12 object-contain border border-slate-200 rounded p-0.5 bg-white shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 space-y-1.5">
-                    <select
-                      aria-label="Pilih Preset Logo Kiri"
-                      value={kopConfig.logoKiriPreset}
-                      onChange={(e) =>
-                        setKopConfig((prev) => ({
-                          ...prev,
-                          logoKiriPreset: e.target.value as LogoPresetType,
-                        }))
-                      }
-                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
-                    >
-                      <option value="pemda">Logo Pemda (Kab. Konawe Selatan)</option>
-                      <option value="kemenag">Logo Kementerian Agama (Ikhlas Beramal)</option>
-                      <option value="tutwuri">Logo Tut Wuri Handayani</option>
-                      <option value="custom">Logo Upload Sendiri</option>
-                      <option value="none">Tanpa Logo Kiri</option>
-                    </select>
-                    <label className="inline-flex items-center gap-1.5 text-emerald-800 font-medium cursor-pointer hover:underline">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Upload Gambar Logo Kiri...</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleUploadCustomLogo('kiri', e)}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Logo Kanan */}
-              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
-                <label className="block font-semibold text-slate-800">
-                  Opsi Logo Kanan (Default: Kemenag / Tut Wuri Handayani)
-                </label>
-                <div className="flex items-center gap-3">
-                  {logoKananUrl && (
-                    <img
-                      src={logoKananUrl}
-                      alt="Pratinjau Logo Kanan"
-                      className="w-10 h-12 object-contain border border-slate-200 rounded p-0.5 bg-white shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 space-y-1.5">
-                    <select
-                      aria-label="Pilih Preset Logo Kanan"
-                      value={kopConfig.logoKananPreset}
-                      onChange={(e) =>
-                        setKopConfig((prev) => ({
-                          ...prev,
-                          logoKananPreset: e.target.value as LogoPresetType,
-                        }))
-                      }
-                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
-                    >
-                      <option value="kemenag">Logo Kementerian Agama (Ikhlas Beramal)</option>
-                      <option value="tutwuri">Logo Tut Wuri Handayani</option>
-                      <option value="pemda">Logo Pemda (Kab. Konawe Selatan)</option>
-                      <option value="custom">Logo Upload Sendiri</option>
-                      <option value="none">Tanpa Logo Kanan</option>
-                    </select>
-                    <label className="inline-flex items-center gap-1.5 text-emerald-800 font-medium cursor-pointer hover:underline">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Upload Gambar Logo Kanan...</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleUploadCustomLogo('kanan', e)}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Baris Kop 1, 2, 3, Judul & Tahun Pelajaran */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">Baris Kop 1</label>
-                <input
-                  type="text"
-                  value={kopConfig.barisKop1}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, barisKop1: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">
-                  Baris Kop 2 (Dinas / KKG PAIBP)
-                </label>
-                <input
-                  type="text"
-                  value={kopConfig.barisKop2}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, barisKop2: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">
-                  Baris Kop 3 (Kecamatan / Sekolah)
-                </label>
-                <input
-                  type="text"
-                  value={kopConfig.barisKop3}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, barisKop3: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="md:col-span-2">
-                <label className="block font-semibold text-slate-800 mb-1">
-                  Judul Asesmen pada Kop
-                </label>
-                <input
-                  type="text"
-                  value={kopConfig.judulAsesmenDokumen}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, judulAsesmenDokumen: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">Tahun Pelajaran</label>
-                <input
-                  type="text"
-                  value={kopConfig.tahunPelajaran}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, tahunPelajaran: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">Waktu Ujian</label>
-                <input
-                  type="text"
-                  value={kopConfig.waktuUjian}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, waktuUjian: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">
-                  Nama Pengawas PAI
-                </label>
-                <input
-                  type="text"
-                  value={kopConfig.namaPengawasPai}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, namaPengawasPai: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">NIP Pengawas PAI</label>
-                <input
-                  type="text"
-                  value={kopConfig.nipPengawasPai}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, nipPengawasPai: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">Nama Guru PAI</label>
-                <input
-                  type="text"
-                  value={kopConfig.namaGuruPai}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, namaGuruPai: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">NIP Guru PAI</label>
-                <input
-                  type="text"
-                  value={kopConfig.nipGuruPai}
-                  onChange={(e) =>
-                    setKopConfig((prev) => ({ ...prev, nipGuruPai: e.target.value }))
-                  }
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900"
-                />
-              </div>
-            </div>
+          <div className="pt-4 border-t border-slate-200 bg-slate-50/80 p-4 rounded-xl">
+            <KopPejabatForm
+              kopConfig={kopConfig}
+              onChangeKopConfig={onChangeKopConfig}
+              onResetDefault={onResetKopConfig}
+            />
           </div>
         )}
 
@@ -717,6 +491,9 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
                 </tbody>
               </table>
             </div>
+
+            {/* Blok Tanda Tangan Resmi di Bagian Bawah Kisi-Kisi */}
+            {renderOfficialSignatureBlock('kisi-kisi')}
           </section>
         )}
 
@@ -1512,6 +1289,9 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
                 );
               })}
             </div>
+
+            {/* Blok Tanda Tangan Resmi di Bagian Bawah Kartu Soal */}
+            {renderOfficialSignatureBlock('kartu-soal')}
           </section>
         )}
 
@@ -1824,26 +1604,8 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({ pkg, onP
                 </table>
               </div>
 
-              {/* Tanda Tangan Pengawas PAI & Guru PAI */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-3 text-xs">
-                <div className="space-y-12 pl-4">
-                  <div className="font-bold">Pengawas PAI</div>
-                  <div>
-                    <div className="font-bold underline">{kopConfig.namaPengawasPai}</div>
-                    <div className="font-bold">NIP. {kopConfig.nipPengawasPai}</div>
-                  </div>
-                </div>
-                <div className="space-y-12 pl-4">
-                  <div>
-                    <div>........................., .................................... 2026</div>
-                    <div className="font-bold">Guru Pendidikan Agama Islam</div>
-                  </div>
-                  <div>
-                    <div className="font-bold">{kopConfig.namaGuruPai}</div>
-                    <div className="font-bold">NIP. {kopConfig.nipGuruPai}</div>
-                  </div>
-                </div>
-              </div>
+              {/* Tanda Tangan Pengawas PAI / Kepala Sekolah & Guru PAI di Bawah Lembar Asesmen Praktik */}
+              {renderOfficialSignatureBlock('praktik')}
 
               {/* Deskripsi Indikator Kinerja Praktik (Skor 1-4) */}
               <div className="no-print pt-4 font-sans space-y-2">

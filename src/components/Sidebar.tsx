@@ -9,6 +9,7 @@ import {
   Scale,
   ShieldCheck,
   Printer,
+  Settings2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,6 +18,7 @@ interface SidebarProps {
   activeSection: string;
   onNavigateSection: (sectionId: string) => void;
   onPrintDocument: () => void;
+  onOpenKopModal?: () => void;
 }
 
 const NAV_ITEMS = [
@@ -34,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeSection,
   onNavigateSection,
   onPrintDocument,
+  onOpenKopModal,
 }) => {
   return (
     <>
@@ -136,7 +139,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Primary Action Button in Sidebar Footer */}
-          <div className="pt-4 border-t border-slate-200 space-y-3">
+          <div className="pt-4 border-t border-slate-200 space-y-2.5">
+            {onOpenKopModal && (
+              <button
+                type="button"
+                onClick={onOpenKopModal}
+                className="w-full px-3.5 py-2 text-xs font-semibold text-emerald-950 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Settings2 className="w-3.5 h-3.5 text-emerald-800 shrink-0" />
+                <span>⚙️ Pengaturan Kop &amp; Pejabat</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onPrintDocument}

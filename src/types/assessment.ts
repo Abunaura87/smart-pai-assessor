@@ -211,10 +211,14 @@ export interface KopSoalConfig {
   waktuUjian: string;
   namaSekolah: string;
   kabupatenKota: string;
+  tempatTanggalTandatangan: string;
+  jabatanKiri: string;
   namaPengawasPai: string;
   nipPengawasPai: string;
+  jabatanKanan: string;
   namaGuruPai: string;
   nipGuruPai: string;
 }
+
 
 

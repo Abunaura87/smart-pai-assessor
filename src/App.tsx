@@ -4,26 +4,68 @@
  */
 
 import React, { useState } from 'react';
-import { AssessmentPackage, AssessmentParameters, FaseCode } from './types/assessment';
+import {
+  AssessmentPackage,
+  AssessmentParameters,
+  FaseCode,
+  KopSoalConfig,
+} from './types/assessment';
 import { buildCustomFallbackPackage, PRESET_PACKAGES } from './data/presetPackages';
 import { getFaseProfile } from './utils/paiRules';
+import {
+  getDefaultKopConfig,
+  loadKopConfigFromStorage,
+  saveKopConfigToStorage,
+} from './utils/documentExporter';
 import { Sidebar } from './components/Sidebar';
 import { ParameterPanel } from './components/ParameterPanel';
 import { AssessmentDocument } from './components/AssessmentDocument';
 import { KaidahValidatorSection } from './components/KaidahValidatorSection';
-import { BookCheck, Layers, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { KopPejabatForm } from './components/KopPejabatForm';
+import { BookCheck, Layers, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
 
 export default function App() {
   const [activePackage, setActivePackage] = useState<AssessmentPackage>(PRESET_PACKAGES[0]);
   const [parameters, setParameters] = useState<AssessmentParameters>(PRESET_PACKAGES[0].parameters);
+  const [kopConfig, setKopConfig] = useState<KopSoalConfig>(() =>
+    loadKopConfigFromStorage(PRESET_PACKAGES[0])
+  );
+  const [isKopModalOpen, setIsKopModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('bagian-1');
 
+  const handleChangeKopConfig = (nextKop: KopSoalConfig) => {
+    setKopConfig(nextKop);
+    saveKopConfigToStorage(nextKop);
+  };
+
+  const handleResetKopConfig = () => {
+    const defaultKop = getDefaultKopConfig(activePackage);
+    setKopConfig(defaultKop);
+    saveKopConfigToStorage(defaultKop);
+  };
+
+  const syncKopForPackage = (pkg: AssessmentPackage) => {
+    const nextDefault = getDefaultKopConfig(pkg);
+    setKopConfig((prev) => {
+      const updated: KopSoalConfig = {
+        ...prev,
+        layoutMode: nextDefault.layoutMode,
+        judulAsesmenDokumen: nextDefault.judulAsesmenDokumen,
+        waktuUjian: nextDefault.waktuUjian,
+        namaSekolah: nextDefault.namaSekolah,
+      };
+      saveKopConfigToStorage(updated);
+      return updated;
+    });
+  };
+
   const handleSelectPresetPackage = (pkg: AssessmentPackage) => {
     setActivePackage(pkg);
     setParameters(pkg.parameters);
+    syncKopForPackage(pkg);
     setStatusMessage(
       `Menampilkan paket instrumen "${pkg.judulAsesmen}" (${pkg.parameters.fase} · ${pkg.parameters.kelas}).`
     );
@@ -47,6 +89,7 @@ export default function App() {
     setParameters(nextParams);
     const customPkg = buildCustomFallbackPackage(nextParams);
     setActivePackage(customPkg);
+    syncKopForPackage(customPkg);
     setStatusMessage(`Memuat instrumen asesmen adaptasi ${fase} (${profile.kelasRange}).`);
   };
 
@@ -56,11 +99,9 @@ export default function App() {
 
     if (faseChanged) {
       const matchingPreset = PRESET_PACKAGES.find((p) => p.parameters.fase === nextParams.fase);
-      if (matchingPreset) {
-        setActivePackage(matchingPreset);
-      } else {
-        setActivePackage(buildCustomFallbackPackage(nextParams));
-      }
+      const nextPkg = matchingPreset || buildCustomFallbackPackage(nextParams);
+      setActivePackage(nextPkg);
+      syncKopForPackage(nextPkg);
       setStatusMessage(
         `Parameter dan pratinjau dokumen disesuaikan ke ${nextParams.fase} (${nextParams.kelas}).`
       );
@@ -72,6 +113,7 @@ export default function App() {
     // Immediately synthesize deterministic blueprint & items so UI updates with zero latency
     const immediatePkg = buildCustomFallbackPackage(paramsToGenerate);
     setActivePackage(immediatePkg);
+    syncKopForPackage(immediatePkg);
     setStatusMessage(
       `Instrumen asesmen "${immediatePkg.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
     );
@@ -92,6 +134,7 @@ export default function App() {
         const data = await response.json();
         if (data.package) {
           setActivePackage(data.package);
+          syncKopForPackage(data.package);
           setStatusMessage(
             `Instrumen asesmen "${data.package.judulAsesmen}" (${paramsToGenerate.fase} · ${paramsToGenerate.kelas}) berhasil disusun secara berurutan (5 Bagian Resmi: Kisi-Kisi, Naskah Soal, Kartu Soal, Kunci & Pembahasan, Rubrik & Praktik).`
           );
@@ -125,13 +168,14 @@ export default function App() {
         activeSection={activeSection}
         onNavigateSection={handleNavigateSection}
         onPrintDocument={handlePrint}
+        onOpenKopModal={() => setIsKopModalOpen(true)}
       />
 
       {/* Main Content Area — Automatically expands horizontally when sidebar is collapsed */}
-      <div className="flex-1 min-w-0 flex flex-col transition-all duration-200">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col transition-all duration-200">
         <main
           id="workspace"
-          className={`flex-1 w-full mx-auto py-8 space-y-8 transition-all duration-200 ${
+          className={`flex-1 min-h-0 w-full mx-auto py-8 space-y-8 transition-all duration-200 ${
             isSidebarOpen
               ? 'max-w-[1440px] px-4 sm:px-6'
               : 'max-w-full px-4 sm:px-8 pt-16 lg:pt-8'
@@ -162,24 +206,35 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Inline Sidebar Toggle Shortcut inside Workspace Header */}
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                {isSidebarOpen ? (
-                  <>
-                    <PanelLeftClose className="w-4 h-4 text-slate-700 shrink-0" />
-                    <span>Sembunyikan Sidebar</span>
-                  </>
-                ) : (
-                  <>
-                    <PanelLeftOpen className="w-4 h-4 text-emerald-800 shrink-0" />
-                    <span>Tampilkan Sidebar</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons in Workspace Header */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsKopModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-950 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Settings2 className="w-4 h-4 text-emerald-800 shrink-0" />
+                  <span>⚙️ Pengaturan Kop &amp; Pejabat</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  {isSidebarOpen ? (
+                    <>
+                      <PanelLeftClose className="w-4 h-4 text-slate-700 shrink-0" />
+                      <span>Sembunyikan Sidebar</span>
+                    </>
+                  ) : (
+                    <>
+                      <PanelLeftOpen className="w-4 h-4 text-emerald-800 shrink-0" />
+                      <span>Tampilkan Sidebar</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Preset Curriculum Package Switcher */}
@@ -235,19 +290,34 @@ export default function App() {
             </div>
           )}
 
-          {/* Two-Zone Sandbox Layout: Left Parameter Protocol Deck + Right 5-Part Output Document */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <aside className="no-print lg:col-span-4 lg:sticky lg:top-6">
+          {/* Two-Zone Sandbox Layout: Left Independently Scrollable Parameter Deck + Right 5-Part Output Document */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start min-h-0">
+            <aside
+              data-testid="config-scroll-panel"
+              style={{ maxHeight: '100vh', overflowY: 'auto' }}
+              className="no-print lg:col-span-4 lg:sticky lg:top-0 lg:h-screen lg:max-h-screen overflow-y-auto min-h-0 pb-24 pr-1"
+            >
               <ParameterPanel
                 parameters={parameters}
                 onChangeParameters={handleParametersChange}
                 onGenerate={handleGenerateAssessment}
                 isGenerating={isGenerating}
+                kopConfig={kopConfig}
+                onChangeKopConfig={handleChangeKopConfig}
+                onResetKopConfig={handleResetKopConfig}
+                onOpenKopModal={() => setIsKopModalOpen(true)}
               />
             </aside>
 
-            <div className="lg:col-span-8 space-y-8 min-w-0">
-              <AssessmentDocument pkg={activePackage} onPrint={handlePrint} />
+            <div className="lg:col-span-8 space-y-8 min-w-0 min-h-0">
+              <AssessmentDocument
+                pkg={activePackage}
+                kopConfig={kopConfig}
+                onChangeKopConfig={handleChangeKopConfig}
+                onResetKopConfig={handleResetKopConfig}
+                onOpenKopModal={() => setIsKopModalOpen(true)}
+                onPrint={handlePrint}
+              />
             </div>
           </div>
 
@@ -271,6 +341,58 @@ export default function App() {
           </div>
         </footer>
       </div>
+
+      {/* Modal: Pengaturan Kop & Identitas Penandatangan (Real-Time + Tersimpan di localStorage) */}
+      {isKopModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kop-modal-title"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+        >
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4 bg-slate-50">
+              <div>
+                <span className="text-[11px] font-semibold text-emerald-800 block">
+                  SINKRONISASI REAL-TIME &amp; TERSIMPAN OTOMATIS DI LOCALSTORAGE
+                </span>
+                <h2 id="kop-modal-title" className="text-base sm:text-lg font-bold text-slate-900">
+                  ⚙️ Pengaturan Kop &amp; Identitas Penandatangan
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsKopModalOpen(false)}
+                aria-label="Tutup Pengaturan Kop & Pejabat"
+                className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 min-h-0">
+              <KopPejabatForm
+                kopConfig={kopConfig}
+                onChangeKopConfig={handleChangeKopConfig}
+                onResetDefault={handleResetKopConfig}
+              />
+            </div>
+
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-600">
+                Perubahan otomatis memperbarui Kop Soal, Kisi-Kisi, Kartu Soal, &amp; Lembar Praktik.
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsKopModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-white bg-emerald-800 hover:bg-emerald-900 rounded-lg transition-colors cursor-pointer"
+              >
+                Selesai &amp; Terapkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

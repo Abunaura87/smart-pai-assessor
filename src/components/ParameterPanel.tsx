@@ -5,6 +5,7 @@ import {
   ElemenPAI,
   FaseCode,
   JenisUjian,
+  KopSoalConfig,
 } from '../types/assessment';
 import {
   calculateDifficultyAllocation,
@@ -15,13 +16,27 @@ import {
   NILAI_MODERASI_OPTIONS,
   normalizeComposition,
 } from '../utils/paiRules';
-import { Sparkles, Plus, Minus, BookOpen, AlertCircle } from 'lucide-react';
+import { KopPejabatForm } from './KopPejabatForm';
+import {
+  Sparkles,
+  Plus,
+  Minus,
+  BookOpen,
+  AlertCircle,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 
 interface ParameterPanelProps {
   parameters: AssessmentParameters;
   onChangeParameters: (next: AssessmentParameters) => void;
   onGenerate: (params: AssessmentParameters) => void;
   isGenerating: boolean;
+  kopConfig: KopSoalConfig;
+  onChangeKopConfig: (next: KopSoalConfig) => void;
+  onResetKopConfig: () => void;
+  onOpenKopModal: () => void;
 }
 
 const ALL_ELEMEN: ElemenPAI[] = [
@@ -117,8 +132,13 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onChangeParameters,
   onGenerate,
   isGenerating,
+  kopConfig,
+  onChangeKopConfig,
+  onResetKopConfig,
+  onOpenKopModal,
 }) => {
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isKopAccordionOpen, setIsKopAccordionOpen] = useState(false);
   const profile = getFaseProfile(parameters.fase);
   const totalSoal = getTotalQuestions(parameters.bentukSoalCounts);
   const diffAlloc = calculateDifficultyAllocation(totalSoal, parameters.komposisiKesulitan);
@@ -205,16 +225,30 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
       aria-label="Formulir Parameter Asesmen PAIBP"
       className="bg-white border border-slate-200 rounded-xl p-6 space-y-6"
     >
-      <div className="border-b border-slate-200 pb-4">
-        <p className="text-xs font-medium text-emerald-800">
-          Protokol Parameter Input · Kurikulum Merdeka
-        </p>
-        <h2 className="text-xl font-bold text-slate-900 mt-1">
-          Konfigurasi Kisi-Kisi & Butir Soal
-        </h2>
-        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-          Sesuaikan fase, elemen PAIBP, bentuk soal AKM, dan proporsi level kognitif. Sistem menyusun matriks kisi-kisi terlebih dahulu (Blueprint-First) sebelum menurunkan naskah soal.
-        </p>
+      <div className="border-b border-slate-200 pb-4 space-y-3">
+        <div>
+          <p className="text-xs font-medium text-emerald-800">
+            Protokol Parameter Input · Kurikulum Merdeka
+          </p>
+          <h2 className="text-xl font-bold text-slate-900 mt-1">
+            Konfigurasi Kisi-Kisi & Butir Soal
+          </h2>
+          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            Sesuaikan fase, elemen PAIBP, bentuk soal AKM, dan proporsi level kognitif. Sistem menyusun matriks kisi-kisi terlebih dahulu (Blueprint-First) sebelum menurunkan naskah soal.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpenKopModal}
+          className="w-full py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-lg text-xs font-semibold flex items-center justify-between gap-2 transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <Settings className="w-4 h-4 text-emerald-800 shrink-0" />
+            <span>⚙️ Pengaturan Kop &amp; Pejabat Penandatangan</span>
+          </span>
+          <span className="text-[11px] font-medium text-emerald-800 underline">Buka Form</span>
+        </button>
       </div>
 
       {/* 1. Jenjang & Fase Selector */}
@@ -555,6 +589,37 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             />
           </div>
         </div>
+      </div>
+
+      {/* 6. Accordion Pengaturan Kop & Identitas Penandatangan */}
+      <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/70">
+        <button
+          type="button"
+          onClick={() => setIsKopAccordionOpen((prev) => !prev)}
+          aria-expanded={isKopAccordionOpen}
+          className="w-full px-3.5 py-2.5 flex items-center justify-between gap-2 text-left text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200/70 transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <Settings className="w-3.5 h-3.5 text-emerald-800 shrink-0" />
+            <span>06. Pengaturan Kop &amp; Identitas Penandatangan</span>
+          </span>
+          {isKopAccordionOpen ? (
+            <ChevronUp className="w-4 h-4 text-slate-600 shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-600 shrink-0" />
+          )}
+        </button>
+
+        {isKopAccordionOpen && (
+          <div className="p-3.5 border-t border-slate-200 bg-slate-50">
+            <KopPejabatForm
+              kopConfig={kopConfig}
+              onChangeKopConfig={onChangeKopConfig}
+              onResetDefault={onResetKopConfig}
+              compact={true}
+            />
+          </div>
+        )}
       </div>
 
       {validationError && (
