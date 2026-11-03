@@ -568,6 +568,52 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
               </table>
             </div>
 
+            {pkg.pemetaanUraian && pkg.pemetaanUraian.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <div className="text-xs sm:text-sm font-bold uppercase font-serif text-slate-900">
+                  Pemetaan Soal Uraian / Essay
+                </div>
+                <div className="overflow-x-auto border border-slate-300 rounded-lg">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-900 border-b border-slate-300">
+                        <th className="py-2 px-2 font-semibold w-12 text-center border-r border-slate-300">
+                          No
+                        </th>
+                        <th className="py-2 px-2.5 font-semibold border-r border-slate-300">
+                          Tujuan Pembelajaran
+                        </th>
+                        <th className="py-2 px-2 font-semibold w-28 text-center border-r border-slate-300">
+                          Kelas / Smt
+                        </th>
+                        <th className="py-2 px-2.5 font-semibold min-w-[160px]">
+                          Konten / Materi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-300">
+                      {pkg.pemetaanUraian.map((row) => (
+                        <tr key={row.no} className="hover:bg-slate-50">
+                          <td className="py-2 px-2 font-mono text-center font-semibold text-slate-900 tabular-nums align-top border-r border-slate-300">
+                            {row.no}
+                          </td>
+                          <td className="py-2 px-2.5 text-slate-800 leading-relaxed align-top border-r border-slate-300">
+                            {row.tujuanPembelajaran}
+                          </td>
+                          <td className="py-2 px-2 font-mono text-center text-slate-900 whitespace-nowrap align-top border-r border-slate-300">
+                            {row.kelasSemester}
+                          </td>
+                          <td className="py-2 px-2.5 font-medium text-slate-900 leading-snug align-top">
+                            {row.kontenMateri}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Blok Tanda Tangan Resmi di Bagian Bawah Kisi-Kisi */}
             {renderOfficialSignatureBlock('kisi-kisi')}
           </section>
@@ -900,6 +946,17 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
               </div>
             </div>
 
+            {/* KOTAK PETUNJUK UMUM (Standar KKG PAI) */}
+            <div className="border border-black p-3 my-2 text-xs sm:text-sm font-serif leading-relaxed">
+              <div className="font-bold uppercase mb-1">Petunjuk Umum:</div>
+              <ol className="list-decimal list-inside space-y-0.5">
+                <li>Berdoalah sebelum mengerjakan soal!</li>
+                <li>Tulislah nama dan nomor presensimu pada lembar jawaban yang telah disediakan!</li>
+                <li>Bacalah dengan teliti setiap butir soal sebelum Anda menjawabnya!</li>
+                <li>Kerjakan terlebih dahulu soal-soal yang kamu anggap paling mudah!</li>
+              </ol>
+            </div>
+
             {/* Sub-bagian I / A: Soal Pilihan Ganda */}
             {pgAndObjektifSoal.length > 0 && (
               <div className="space-y-4 font-serif text-black">
@@ -914,7 +971,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
                     </div>
                   ) : (
                     <div>
-                      A. Berilah tanda silang (X) pada huruf {optionCommandLetters} sesuai jawaban
+                      I. Berilah tanda silang (X) pada huruf {optionCommandLetters} sesuai jawaban
                       yang paling tepat!
                     </div>
                   )}
@@ -1069,9 +1126,16 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
             {isianSingkatSoal.length > 0 && (
               <div data-testid="section-isian-singkat" className="space-y-4 pt-3 font-serif text-black">
                 <div className="text-xs sm:text-sm font-bold text-black">
-                  {kopConfig.layoutMode === 'us'
-                    ? 'II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!'
-                    : 'B. Isian Singkat — Isilah titik-titik di bawah ini dengan jawaban yang tepat!'}
+                  {kopConfig.layoutMode === 'us' ? (
+                    'II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!'
+                  ) : (
+                    <div>
+                      <div>B. Isian Singkat</div>
+                      <div className="font-normal italic">
+                        II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -1125,13 +1189,20 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
             {uraianSoal.length > 0 && (
               <div data-testid="section-uraian" className="space-y-4 pt-3 font-serif text-black">
                 <div className="text-xs sm:text-sm font-bold text-black">
-                  {kopConfig.layoutMode === 'us'
-                    ? isianSingkatSoal.length > 0
+                  {kopConfig.layoutMode === 'us' ? (
+                    isianSingkatSoal.length > 0
                       ? 'III. Kerjakanlah soal Essay / Uraian berikut ini dengan tepat dan jelas!'
                       : 'II. Kerjakanlah soal Essay / Uraian berikut ini dengan tepat dan jelas!'
-                    : isianSingkatSoal.length > 0
-                    ? 'C. Uraian — Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan benar!'
-                    : 'B. Uraian — Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan benar!'}
+                  ) : (
+                    <div>
+                      <div>{isianSingkatSoal.length > 0 ? 'C. Uraian' : 'B. Uraian'}</div>
+                      <div className="font-normal italic">
+                        {isianSingkatSoal.length > 0
+                          ? 'III. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!'
+                          : 'II. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!'}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -1180,6 +1251,11 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Footer Naskah Soal Standar KKG PAI */}
+            <div className="text-center font-serif text-[11px] italic text-slate-600 pt-6 mt-4 border-t border-slate-300">
+              Disusun oleh KKG PAI / Smart PAI Assessor
+            </div>
           </section>
         )}
 

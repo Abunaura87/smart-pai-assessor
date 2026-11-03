@@ -572,16 +572,26 @@ export function formatStandardOutputMarkdown(pkg: AssessmentPackage): string {
     );
   }
 
+  if (pkg.pemetaanUraian && pkg.pemetaanUraian.length > 0) {
+    lines.push('');
+    lines.push('#### PEMETAAN SOAL URAIAN / ESSAY');
+    lines.push('| No | Tujuan Pembelajaran | Kelas / Smt | Konten / Materi |');
+    lines.push('| :---: | :--- | :---: | :--- |');
+    for (const u of pkg.pemetaanUraian) {
+      lines.push(`| ${u.no} | ${u.tujuanPembelajaran} | ${u.kelasSemester} | ${u.kontenMateri} |`);
+    }
+  }
+
   lines.push('');
   lines.push('---');
   lines.push('### 2. NASKAH SOAL SIAP CETAK');
   lines.push('### BAGIAN 2: NASKAH BUTIR SOAL');
   lines.push('');
   lines.push('**PETUNJUK UMUM PENGERJAAN SOAL:**');
-  lines.push('1. Awali kegiatan mengerjakan soal dengan membaca *Basmalah* dan doa belajar.');
-  lines.push('2. Tulislah Nama Murid, Kelas, dan Nomor Absen pada lembar jawaban yang tersedia.');
-  lines.push('3. Bacalah setiap stimulus, kutipan ayat, tabel, atau narasi soal dengan teliti sebelum memilih/menuliskan jawaban.');
-  lines.push('4. Kerjakan secara jujur dan mandiri sebagai wujud akhlak mulia (*siddiq* dan *amanah*).');
+  lines.push('1. Berdoalah sebelum mengerjakan soal!');
+  lines.push('2. Tulislah nama dan nomor presensimu pada lembar jawaban yang telah disediakan!');
+  lines.push('3. Bacalah dengan teliti setiap butir soal sebelum Anda menjawabnya!');
+  lines.push('4. Kerjakan terlebih dahulu soal-soal yang kamu anggap paling mudah!');
   lines.push('');
 
   for (const soal of pkg.butirSoal) {

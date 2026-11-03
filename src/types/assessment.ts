@@ -137,6 +137,13 @@ export interface PracticeAssessmentAspect {
   bobotMaksimal: number;
 }
 
+export interface PemetaanUraianRow {
+  no: number;
+  tujuanPembelajaran: string;
+  kelasSemester: string;
+  kontenMateri: string;
+}
+
 export interface AssessmentPackage {
   id: string;
   judulAsesmen: string;
@@ -153,6 +160,7 @@ export interface AssessmentPackage {
     insersiModerasi: string;
   };
   kisiKisi: BlueprintRow[];
+  pemetaanUraian?: PemetaanUraianRow[];
   // BAGIAN 2, 3, 4: NASKAH SOAL, KARTU SOAL & KUNCI PEMBAHASAN
   butirSoal: QuestionItem[];
   // BAGIAN 5: RUBRIK PENILAIAN & ASESMEN PRAKTIK

@@ -180,7 +180,7 @@ test('Zero-Boilerplate & Age-Psychology rules enforce unique stimuli, no topic-e
       );
       assert.equal(validation.score, 100, `Expected 100% compliance score for ${pkg.id}`);
 
-      const stimuli = pkg.butirSoal.map((s) => s.stimulus.trim().toLowerCase());
+      const stimuli = pkg.butirSoal.map((s) => (s.stimulus ? s.stimulus.trim().toLowerCase() : s.pertanyaan.trim().toLowerCase()));
       const uniqueStimuli = new Set(stimuli);
       assert.equal(
         uniqueStimuli.size,

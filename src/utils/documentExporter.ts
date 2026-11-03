@@ -434,6 +434,35 @@ export function buildRichDocumentHtml(
               .join('')}
           </tbody>
         </table>
+        ${
+          pkg.pemetaanUraian && pkg.pemetaanUraian.length > 0
+            ? `<div style="font-weight:bold; font-size:11pt; margin-top:14pt; margin-bottom:4pt; text-transform:uppercase;">
+                PEMETAAN SOAL URAIAN / ESSAY
+              </div>
+              <table style="width:100%; border-collapse:collapse; border:1px solid #000000; font-size:10.5pt; margin-bottom:10pt;">
+                <thead>
+                  <tr style="background-color:#e2e8f0; font-weight:bold; text-align:center;">
+                    <th style="border:1px solid #000000; padding:5pt; width:30pt;">No</th>
+                    <th style="border:1px solid #000000; padding:5pt;">Tujuan Pembelajaran</th>
+                    <th style="border:1px solid #000000; padding:5pt; width:80pt;">Kelas / Smt</th>
+                    <th style="border:1px solid #000000; padding:5pt; width:140pt;">Konten / Materi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pkg.pemetaanUraian
+                    .map(
+                      (r) => `<tr>
+                        <td style="border:1px solid #000000; padding:4pt; text-align:center; vertical-align:top;">${r.no}</td>
+                        <td style="border:1px solid #000000; padding:4pt; vertical-align:top;">${escapeHtml(r.tujuanPembelajaran)}</td>
+                        <td style="border:1px solid #000000; padding:4pt; text-align:center; vertical-align:top;">${escapeHtml(r.kelasSemester)}</td>
+                        <td style="border:1px solid #000000; padding:4pt; vertical-align:top;">${escapeHtml(r.kontenMateri)}</td>
+                      </tr>`
+                    )
+                    .join('')}
+                </tbody>
+              </table>`
+            : ''
+        }
         <table style="width:100%; border-collapse:collapse; border:none; margin-top:14pt; font-size:11pt;">
           <tr>
             <td style="width:50%; border:none; padding:4pt 16pt; vertical-align:top;">
@@ -717,13 +746,22 @@ export function buildRichDocumentHtml(
   const naskahSoalSectionHtml = `<div style="font-family:'Times New Roman', Times, serif; font-size:12pt; color:#000000;">
     ${kopSuratTableHtml}
     ${studentIdentityBoxHtml}
+    <div style="border:1px solid #000000; padding:6pt 8pt; margin-top:4pt; margin-bottom:10pt; font-size:11pt; line-height:1.4;">
+      <div style="font-weight:bold; text-transform:uppercase; margin-bottom:2pt;">Petunjuk Umum:</div>
+      <ol style="margin:0; padding-left:16pt;">
+        <li>Berdoalah sebelum mengerjakan soal!</li>
+        <li>Tulislah nama dan nomor presensimu pada lembar jawaban yang telah disediakan!</li>
+        <li>Bacalah dengan teliti setiap butir soal sebelum Anda menjawabnya!</li>
+        <li>Kerjakan terlebih dahulu soal-soal yang kamu anggap paling mudah!</li>
+      </ol>
+    </div>
     ${
       pgSoal.length > 0
         ? `<div style="font-weight:bold; margin-top:6pt; margin-bottom:6pt;">
             ${
               kop.layoutMode === 'us'
                 ? `I. Pilihan Ganda<br/><span style="font-weight:normal; font-style:italic;">Pilihlah salah satu jawaban yang paling benar di antara ${optionCommandLetters}!</span>`
-                : `A. Berilah tanda silang (X) pada huruf ${optionCommandLetters} sesuai jawaban yang paling tepat!`
+                : `I. Berilah tanda silang (X) pada huruf ${optionCommandLetters} sesuai jawaban yang paling tepat!`
             }
           </div>
           ${renderSoalListHtml(pgSoal, false)}`
@@ -735,7 +773,7 @@ export function buildRichDocumentHtml(
             ${
               kop.layoutMode === 'us'
                 ? `II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!`
-                : `B. Isian Singkat`
+                : `B. Isian Singkat<br/><span style="font-weight:normal; font-style:italic;">II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!</span>`
             }
           </div>
           ${renderSoalListHtml(isianSoal, true)}`
@@ -750,13 +788,16 @@ export function buildRichDocumentHtml(
                   ? `III. Kerjakanlah soal Essay / Uraian berikut ini dengan benar dan jelas!`
                   : `II. Kerjakanlah soal Essay / Uraian berikut ini dengan benar dan jelas!`
                 : isianSoal.length > 0
-                ? `C. Uraian`
-                : `B. Uraian`
+                ? `C. Uraian<br/><span style="font-weight:normal; font-style:italic;">III. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!</span>`
+                : `B. Uraian<br/><span style="font-weight:normal; font-style:italic;">II. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!</span>`
             }
           </div>
           ${renderSoalListHtml(uraianMurniSoal, true)}`
         : ''
     }
+    <div style="text-align:center; font-style:italic; font-size:10pt; color:#475569; margin-top:18pt; padding-top:8pt; border-top:1px solid #cbd5e1;">
+      Disusun oleh KKG PAI / Smart PAI Assessor
+    </div>
   </div>`;
 
   // LJK (Lembar Jawaban) for Mode US
@@ -1078,12 +1119,33 @@ export function buildPlainTextWithoutMarkdown(
         } | Indikator: ${r.indikatorSoalABCD} (${r.bentukSoal}, No. ${r.nomorSoal})`
       );
     }
+    if (pkg.pemetaanUraian && pkg.pemetaanUraian.length > 0) {
+      lines.push('');
+      lines.push('PEMETAAN SOAL URAIAN / ESSAY:');
+      for (const u of pkg.pemetaanUraian) {
+        lines.push(`${u.no}. TP: ${u.tujuanPembelajaran} | Kelas/Smt: ${u.kelasSemester} | Konten: ${u.kontenMateri}`);
+      }
+    }
     lines.push('');
   }
 
+  lines.push('PETUNJUK UMUM:');
+  lines.push('1. Berdoalah sebelum mengerjakan soal!');
+  lines.push('2. Tulislah nama dan nomor presensimu pada lembar jawaban yang telah disediakan!');
+  lines.push('3. Bacalah dengan teliti setiap butir soal sebelum Anda menjawabnya!');
+  lines.push('4. Kerjakan terlebih dahulu soal-soal yang kamu anggap paling mudah!');
+  lines.push('');
+
+  const optionLetters =
+    pkg.parameters.fase === 'Fase A'
+      ? 'a, b, atau c'
+      : pkg.parameters.fase === 'Fase E' || pkg.parameters.fase === 'Fase F'
+      ? 'a, b, c, d, atau e'
+      : 'a, b, c, atau d';
+
   if (pgSoal.length > 0) {
     lines.push(
-      'A. Berilah tanda silang (X) pada huruf a, b, c, atau d sesuai jawaban yang paling tepat!'
+      `I. Berilah tanda silang (X) pada huruf ${optionLetters} sesuai jawaban yang paling tepat!`
     );
     lines.push('');
     for (const s of pgSoal) {
@@ -1099,6 +1161,7 @@ export function buildPlainTextWithoutMarkdown(
 
   if (isianSoal.length > 0) {
     lines.push('B. Isian Singkat');
+    lines.push('II. Isilah titik-titik di bawah ini dengan jawaban yang singkat dan tepat!');
     lines.push('');
     isianSoal.forEach((s, idx) => {
       const num = kop.layoutMode === 'kkg' ? idx + 1 : s.nomor;
@@ -1109,6 +1172,11 @@ export function buildPlainTextWithoutMarkdown(
 
   if (uraianMurniSoal.length > 0) {
     lines.push(isianSoal.length > 0 ? 'C. Uraian' : 'B. Uraian');
+    lines.push(
+      isianSoal.length > 0
+        ? 'III. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!'
+        : 'II. Jawablah pertanyaan-pertanyaan di bawah ini dengan jelas dan tepat!'
+    );
     lines.push('');
     uraianMurniSoal.forEach((s, idx) => {
       const num = kop.layoutMode === 'kkg' ? idx + 1 : s.nomor;

@@ -4,6 +4,7 @@ import {
   AssessmentParameters,
   BlueprintRow,
   ElemenPAI,
+  PemetaanUraianRow,
   QuestionItem,
 } from '../types/assessment';
 import { calculateDifficultyAllocation, getFaseProfile } from '../utils/paiRules';
@@ -1267,12 +1268,24 @@ export function buildCustomFallbackPackage(
     params.elemen.length > 0 ? params.elemen : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
 
   let currentNo = 1;
+  const targetSemester: 'Ganjil' | 'Genap' =
+    params.jenisUjian?.includes('Genap') || params.jenisUjian?.includes('Akhir Jenjang')
+      ? 'Genap'
+      : 'Ganjil';
 
   for (const group of effectiveCounts) {
     for (let i = 0; i < group.jumlah; i++) {
       const no = currentNo++;
       const preferredElemen = elemenList[(no - 1) % elemenList.length];
-      const seed = selectQuestionSeed(params.fase, group.bentuk, preferredElemen, no - 1, usedStimuli);
+      const seed = selectQuestionSeed(
+        params.fase,
+        group.bentuk,
+        preferredElemen,
+        no - 1,
+        usedStimuli,
+        params.kelas,
+        targetSemester
+      );
       const elemen = preferredElemen;
       const levelCode = diffAlloc.sequence[no - 1] ?? 'L2';
       const bloomMap: Record<string, string> = {
@@ -1285,11 +1298,29 @@ export function buildCustomFallbackPackage(
       };
       const bloomLabel = bloomMap[levelCode];
 
-      const cpText =
-        params.capaianPembelajaranOpsional?.trim() || seed.cpRingkas;
-
-      const indikatorABCD = `Disajikan cerita/kasus nyata sesuai usia murid (Condition), murid ${params.kelas} (Audience) dapat ${seed.indikatorTopik} secara tepat (Behavior & Degree).`;
+      const cpText = seed.cpRingkas || params.capaianPembelajaranOpsional?.trim() || 'Memahami dan mengamalkan ajaran Islam secara tepat.';
       const materiPokok = seed.materiPokok || `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
+
+      let indikatorABCD = '';
+      if (group.bentuk === 'Pilihan Ganda') {
+        if (seed.stimulusModel === 'Tabel Pasangan') {
+          indikatorABCD = `Disajikan tabel ${materiPokok}, murid dapat menentukan pasangan yang tepat dengan benar.`;
+        } else if (seed.stimulusModel?.includes('Ayat') || seed.stimulus?.includes('\n')) {
+          indikatorABCD = `Disajikan potongan ayat ${materiPokok}, murid dapat menentukan lanjutan ayat atau artinya dengan tepat.`;
+        } else if (seed.stimulusModel?.includes('Pernyataan')) {
+          indikatorABCD = `Disajikan beberapa pernyataan tentang ${materiPokok}, murid dapat memilih pernyataan yang benar dengan tepat.`;
+        } else if (seed.stimulus) {
+          indikatorABCD = `Disajikan ilustrasi singkat tentang ${materiPokok}, murid dapat menganalisis ${seed.indikatorTopik} dengan benar.`;
+        } else {
+          indikatorABCD = `Murid dapat ${seed.indikatorTopik} dengan tepat dan benar.`;
+        }
+      } else if (group.bentuk === 'Isian Singkat') {
+        indikatorABCD = `Murid dapat menyebutkan ${seed.indikatorTopik} dengan singkat dan tepat.`;
+      } else if (group.bentuk === 'Uraian') {
+        indikatorABCD = `Murid dapat menjelaskan ${seed.indikatorTopik} secara rinci dan tepat.`;
+      } else {
+        indikatorABCD = `Murid dapat menganalisis ${seed.indikatorTopik} dengan tepat.`;
+      }
 
       kisiKisi.push({
         no,
@@ -1342,13 +1373,26 @@ export function buildCustomFallbackPackage(
           nilaiModerasi: params.nilaiModerasiFokus,
         });
       } else if (group.bentuk === 'Pilihan Ganda Kompleks') {
-        const optionPool: Record<string, string> = {
-          A: seed.opsiPGK.A,
-          B: seed.opsiPGK.B,
-          C: seed.opsiPGK.C,
-          D: seed.opsiPGK.D,
-          E: seed.opsiPGK.E ?? seed.opsiPGK.D,
+        const rawOpsiFromPGK = typeof seed.pertanyaanPGK === 'object' && seed.pertanyaanPGK !== null ? (seed.pertanyaanPGK as any) : null;
+        const pgkPool = seed.opsiPGK || rawOpsiFromPGK || {
+          A: seed.opsiPG.A,
+          B: seed.opsiPG.B,
+          C: seed.opsiPG.C,
+          D: seed.opsiPG.D || seed.opsiPG.C,
+          E: seed.opsiPG.E ?? seed.opsiPG.D ?? seed.opsiPG.C,
         };
+        const optionPool: Record<string, string> = {
+          A: pgkPool.A,
+          B: pgkPool.B,
+          C: pgkPool.C,
+          D: pgkPool.D,
+          E: pgkPool.E ?? pgkPool.D,
+        };
+        const pertanyaanPGK =
+          typeof seed.pertanyaanPGK === 'string' && seed.pertanyaanPGK.trim()
+            ? seed.pertanyaanPGK
+            : seed.pertanyaanPG || 'Pilihlah dua jawaban yang paling tepat!';
+        const kunciPGK = seed.kunciPGK || (seed.kunciPG === 'A' ? 'A dan B' : `${seed.kunciPG} dan A`);
 
         butirSoal.push({
           nomor: no,
@@ -1362,12 +1406,12 @@ export function buildCustomFallbackPackage(
           indikatorRef: indikatorABCD,
           stimulus: seed.stimulus,
           instruksiKhusus: 'Pilihlah dua jawaban yang benar!',
-          pertanyaan: seed.pertanyaanPGK,
+          pertanyaan: pertanyaanPGK,
           opsi: optLabels.map((lbl) => ({
             label: lbl,
             teks: optionPool[lbl] || optionPool.D,
           })),
-          kunciJawaban: seed.kunciPGK,
+          kunciJawaban: kunciPGK,
           pembahasanSingkat: seed.pembahasan,
           dalilAtauKonsep: seed.dalil,
           nilaiModerasi: params.nilaiModerasiFokus,
@@ -1379,13 +1423,19 @@ export function buildCustomFallbackPackage(
           aspekPenilaian: `Ketepatan Memilih Dua Tindakan/Pernyataan Benar (${elemen})`,
           skorMaksimal: 4,
           kriteriaSkor: [
-            { skor: 4, deskripsi: `Memilih tepat kedua opsi benar (${seed.kunciPGK}) tanpa memilih opsi pengecoh.` },
+            { skor: 4, deskripsi: `Memilih tepat kedua opsi benar (${kunciPGK}) tanpa memilih opsi pengecoh.` },
             { skor: 2, deskripsi: 'Memilih satu opsi benar tanpa memilih opsi pengecoh.' },
             { skor: 1, deskripsi: 'Memilih satu opsi benar disertai satu opsi pengecoh.' },
           ],
         });
       } else if (group.bentuk === 'Benar/Salah') {
-        const kunciBS = seed.pernyataanBS
+        const pernyataanBS = seed.pernyataanBS && seed.pernyataanBS.length > 0
+          ? seed.pernyataanBS
+          : [
+              { pernyataan: `Penerapan ${materiPokok} merupakan wujud ketaatan kepada Allah Swt.`, jawaban: 'Benar' as const },
+              { pernyataan: `Mengabaikan adab sesama teman sesuai dengan nilai ${params.nilaiModerasiFokus}.`, jawaban: 'Salah' as const },
+            ];
+        const kunciBS = pernyataanBS
           .map((item, idx) => `${idx + 1}: ${item.jawaban}`)
           .join(', ');
         butirSoal.push({
@@ -1400,15 +1450,21 @@ export function buildCustomFallbackPackage(
           indikatorRef: indikatorABCD,
           stimulus: seed.stimulus,
           instruksiKhusus: 'Tentukan Benar atau Salah untuk setiap pernyataan berikut!',
-          pertanyaan: 'Tentukan Benar atau Salah pernyataan berikut sesuai cerita di atas:',
-          pernyataanBenarSalah: seed.pernyataanBS,
+          pertanyaan: 'Tentukan Benar atau Salah pernyataan berikut:',
+          pernyataanBenarSalah: pernyataanBS,
           kunciJawaban: kunciBS,
           pembahasanSingkat: seed.pembahasan,
           dalilAtauKonsep: seed.dalil,
           nilaiModerasi: params.nilaiModerasiFokus,
         });
       } else if (group.bentuk === 'Menjodohkan') {
-        const kunciMatch = seed.pasanganMenjodohkan
+        const pasanganMenjodohkan = seed.pasanganMenjodohkan && seed.pasanganMenjodohkan.length > 0
+          ? seed.pasanganMenjodohkan
+          : [
+              { premis: `Penerapan ${materiPokok}`, respon: 'Diamalkan dengan sungguh-sungguh' },
+              { premis: `Nilai ${params.nilaiModerasiFokus}`, respon: 'Diteladani dalam kehidupan sehari-hari' },
+            ];
+        const kunciMatch = pasanganMenjodohkan
           .map((item, idx) => `${idx + 1} -> ${item.respon}`)
           .join('; ');
         butirSoal.push({
@@ -1425,7 +1481,7 @@ export function buildCustomFallbackPackage(
           instruksiKhusus:
             'Pasangkanlah pernyataan pada lajur kiri (Premis) dengan tindakan/konsep yang tepat pada lajur kanan (Respon)!',
           pertanyaan: 'Pasangkanlah pernyataan berikut dengan jawaban yang tepat:',
-          pasanganMenjodohkan: seed.pasanganMenjodohkan,
+          pasanganMenjodohkan,
           kunciJawaban: kunciMatch,
           pembahasanSingkat: seed.pembahasan,
           dalilAtauKonsep: seed.dalil,
@@ -1443,8 +1499,8 @@ export function buildCustomFallbackPackage(
           taksonomiBloom: bloomLabel,
           indikatorRef: indikatorABCD,
           stimulus: seed.stimulus,
-          pertanyaan: seed.pertanyaanIsian,
-          kunciJawaban: seed.kunciIsian,
+          pertanyaan: seed.pertanyaanIsian || seed.pertanyaanPG || 'Isilah titik-titik di bawah ini dengan tepat!',
+          kunciJawaban: seed.kunciIsian || seed.kunciPG,
           pembahasanSingkat: seed.pembahasan,
           dalilAtauKonsep: seed.dalil,
           nilaiModerasi: params.nilaiModerasiFokus,
@@ -1456,7 +1512,7 @@ export function buildCustomFallbackPackage(
           aspekPenilaian: `Ketepatan Jawaban Isian Singkat (${elemen})`,
           skorMaksimal: 4,
           kriteriaSkor: [
-            { skor: 4, deskripsi: `Menuliskan jawaban "${seed.kunciIsian}" secara tepat dan lengkap.` },
+            { skor: 4, deskripsi: `Menuliskan jawaban "${seed.kunciIsian || seed.kunciPG}" secara tepat dan lengkap.` },
             { skor: 3, deskripsi: 'Menuliskan istilah yang tepat namun terdapat sedikit kekurangan ejaan.' },
             { skor: 2, deskripsi: 'Menuliskan istilah yang semakna secara umum.' },
             { skor: 1, deskripsi: 'Menuliskan jawaban yang kurang tepat.' },
@@ -1475,8 +1531,8 @@ export function buildCustomFallbackPackage(
           taksonomiBloom: bloomLabel,
           indikatorRef: indikatorABCD,
           stimulus: seed.stimulus,
-          pertanyaan: seed.pertanyaanUraian,
-          kunciJawaban: seed.kunciUraian,
+          pertanyaan: seed.pertanyaanUraian || seed.pertanyaanPG || 'Jelaskanlah jawaban atas pertanyaan berikut dengan benar dan tepat!',
+          kunciJawaban: seed.kunciUraian || seed.kunciPG,
           pembahasanSingkat: seed.pembahasan,
           dalilAtauKonsep: seed.dalil,
           nilaiModerasi: params.nilaiModerasiFokus,
@@ -1539,6 +1595,18 @@ export function buildCustomFallbackPackage(
   });
   const grandTotalSkor = bobotPerBentuk.reduce((a, b) => a + b.skorTotal, 0) || 100;
 
+  const pemetaanUraian: PemetaanUraianRow[] = butirSoal
+    .filter((s) => s.bentukSoal === 'Uraian')
+    .map((soal, idx) => {
+      const kisi = kisiKisi.find((k) => k.nomorSoal === String(soal.nomor));
+      return {
+        no: idx + 1,
+        tujuanPembelajaran: kisi?.capaianTujuanPembelajaran || soal.indikatorRef,
+        kelasSemester: kisi?.kelasSmt || profile.defaultSemester,
+        kontenMateri: soal.materiPokok || kisi?.materiPokok || soal.elemen,
+      };
+    });
+
   return {
     id: customId || `custom-${Date.now()}`,
     judulAsesmen: `Instrumen ${params.jenisUjian} PAIBP — ${params.topikMateri || 'Kurikulum Merdeka'}`,
@@ -1554,6 +1622,7 @@ export function buildCustomFallbackPackage(
       insersiModerasi: params.nilaiModerasiFokus,
     },
     kisiKisi,
+    pemetaanUraian,
     butirSoal,
     pedomanPenskoran: {
       bobotPerBentuk,
