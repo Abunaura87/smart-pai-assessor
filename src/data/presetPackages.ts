@@ -9,7 +9,90 @@ import {
 } from '../types/assessment';
 import { calculateDifficultyAllocation, formatKelasSemester, getFaseProfile } from '../utils/paiRules';
 import { selectDistinctNarrativeSeed, selectQuestionSeed } from './narrativeBank';
-import { getChapterTopicsForClassSemester, isPaketGabunganTopic } from './curriculumData';
+import {
+  CURRICULUM_DATABASE_CP020,
+  CurriculumTopic,
+  getChapterTopicsForClassSemester,
+  getTopicsForFaseAndKelas,
+  isPaketGabunganTopic,
+} from './curriculumData';
+
+export {
+  CURRICULUM_DATABASE_CP020,
+  getChapterTopicsForClassSemester,
+  getTopicsForFaseAndKelas,
+  isPaketGabunganTopic,
+};
+export type { CurriculumTopic };
+
+/**
+ * Structured constants database of 120+ (171 total) official CP 020 Tahun 2026 curriculum topics
+ * indexed by Class (Kelas 1 SD/MI s.d. Kelas 12 SMA/MA & SMK/MAK) and Semester (Ganjil & Genap),
+ * including comprehensive 'PAKET SAS', 'PAKET SAT', 'PAKET US', and 'PAKET ATS' options per level.
+ */
+export const CURRICULUM_TOPICS_BY_CLASS_SEMESTER: Record<
+  string,
+  {
+    Ganjil: CurriculumTopic[];
+    Genap: CurriculumTopic[];
+    Semua: CurriculumTopic[];
+    paketUjianOptions: CurriculumTopic[];
+  }
+> = (() => {
+  const classList = [
+    { fase: 'Fase A' as const, kelas: 'Kelas 1 SD/MI' },
+    { fase: 'Fase A' as const, kelas: 'Kelas 2 SD/MI' },
+    { fase: 'Fase B' as const, kelas: 'Kelas 3 SD/MI' },
+    { fase: 'Fase B' as const, kelas: 'Kelas 4 SD/MI' },
+    { fase: 'Fase C' as const, kelas: 'Kelas 5 SD/MI' },
+    { fase: 'Fase C' as const, kelas: 'Kelas 6 SD/MI' },
+    { fase: 'Fase D' as const, kelas: 'Kelas 7 SMP/MTs' },
+    { fase: 'Fase D' as const, kelas: 'Kelas 8 SMP/MTs' },
+    { fase: 'Fase D' as const, kelas: 'Kelas 9 SMP/MTs' },
+    { fase: 'Fase E' as const, kelas: 'Kelas 10 SMA/SMK/MA' },
+    { fase: 'Fase E' as const, kelas: 'Kelas 10 SMA/MA' },
+    { fase: 'Fase E' as const, kelas: 'Kelas 10 SMK/MAK' },
+    { fase: 'Fase F' as const, kelas: 'Kelas 11 SMA/MA' },
+    { fase: 'Fase F' as const, kelas: 'Kelas 11 SMK/MAK' },
+    { fase: 'Fase F' as const, kelas: 'Kelas 12 SMA/MA' },
+    { fase: 'Fase F' as const, kelas: 'Kelas 12 SMK/MAK' },
+  ];
+
+  const map: Record<
+    string,
+    {
+      Ganjil: CurriculumTopic[];
+      Genap: CurriculumTopic[];
+      Semua: CurriculumTopic[];
+      paketUjianOptions: CurriculumTopic[];
+    }
+  > = {};
+
+  for (const item of classList) {
+    const ganjil = getTopicsForFaseAndKelas(item.fase, item.kelas, 'Ganjil');
+    const genap = getTopicsForFaseAndKelas(item.fase, item.kelas, 'Genap');
+    const semua = getTopicsForFaseAndKelas(item.fase, item.kelas, 'Semua');
+    const paketUjianOptions = semua.filter(
+      (t) => t.isPaketGabungan || isPaketGabunganTopic(t.judulTopik)
+    );
+    map[item.kelas] = {
+      Ganjil: ganjil,
+      Genap: genap,
+      Semua: semua,
+      paketUjianOptions,
+    };
+  }
+
+  return map;
+})();
+
+/**
+ * Flat list of all 'PAKET SAS / SAT / US / ATS' combined assessment options across Kelas 1–12
+ * for comprehensive semester-end and school-end assessment generation.
+ */
+export const PAKET_SAS_SAT_US_OPTIONS: CurriculumTopic[] = CURRICULUM_DATABASE_CP020.filter(
+  (t) => t.isPaketGabungan || isPaketGabunganTopic(t.judulTopik)
+);
 
 const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
   {
@@ -1267,6 +1350,14 @@ export function buildCustomFallbackPackage(
   const usedStimuli = new Set<string>();
 
   const isCombinedPkg = isPaketGabunganTopic(params.topikMateri);
+  const isPaketUS =
+    params.topikMateri?.toUpperCase().includes('[PAKET US') ||
+    params.topikMateri?.toUpperCase().includes('AKHIR JENJANG') ||
+    params.jenisUjian === 'Asesmen Akhir Jenjang (AAJ / Ujian Praktik)';
+  const isPaketATS =
+    params.topikMateri?.toUpperCase().includes('[PAKET ATS') ||
+    params.jenisUjian === 'Asesmen Tengah Semester (ATS)';
+
   const allFiveElemen: ElemenPAI[] = [
     'Al-Qur\'an dan Hadis',
     'Akidah',
@@ -1274,35 +1365,68 @@ export function buildCustomFallbackPackage(
     'Fikih',
     'Sejarah Peradaban Islam (SPI)',
   ];
-  const elemenList: ElemenPAI[] =
-    isCombinedPkg && !params.topikMateri.toUpperCase().includes('ATS')
-      ? allFiveElemen
-      : params.elemen.length > 0
-      ? params.elemen
-      : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
+  const atsThreeElemen: ElemenPAI[] = [
+    'Al-Qur\'an dan Hadis',
+    'Akidah',
+    'Akhlak',
+  ];
+
+  const elemenList: ElemenPAI[] = isCombinedPkg
+    ? isPaketATS
+      ? params.elemen.length >= 3
+        ? params.elemen
+        : atsThreeElemen
+      : allFiveElemen
+    : params.elemen.length > 0
+    ? params.elemen
+    : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
 
   let currentNo = 1;
   const targetSemester: 'Ganjil' | 'Genap' | undefined =
-    params.semester === 'Semua'
+    params.semester === 'Semua' || isPaketUS
       ? undefined
       : params.semester === 'Genap'
       ? 'Genap'
       : params.semester === 'Ganjil'
       ? 'Ganjil'
-      : params.jenisUjian?.includes('Genap') || params.jenisUjian?.includes('Akhir Jenjang')
+      : params.topikMateri?.toUpperCase().includes('SAT GENAP') ||
+        params.topikMateri?.toUpperCase().includes('SEMESTER GENAP') ||
+        params.jenisUjian?.includes('Genap')
       ? 'Genap'
       : 'Ganjil';
+
+  const allTopicsForClass = getTopicsForFaseAndKelas(
+    params.fase,
+    params.kelas,
+    params.semester || targetSemester || 'Semua'
+  );
+  const selectedSingleTopic = !isCombinedPkg
+    ? allTopicsForClass.find(
+        (t) =>
+          t.judulTopik === params.topikMateri ||
+          t.materiPokok === params.topikMateri ||
+          (params.topikMateri && params.topikMateri.includes(t.judulTopik))
+      )
+    : undefined;
 
   const chapterTopicsForClass = getChapterTopicsForClassSemester(
     params.fase,
     params.kelas,
-    params.semester || targetSemester || 'Ganjil'
+    isPaketUS || params.semester === 'Semua' ? 'Semua' : params.semester || targetSemester || 'Ganjil'
   );
 
   for (const group of effectiveCounts) {
     for (let i = 0; i < group.jumlah; i++) {
       const no = currentNo++;
       const preferredElemen = elemenList[(no - 1) % elemenList.length];
+      // For US / Semua Semester, alternate Ganjil & Genap seeds so both semesters are covered proportionally
+      const questionSemester: 'Ganjil' | 'Genap' | undefined =
+        targetSemester !== undefined
+          ? targetSemester
+          : no % 2 === 1
+          ? 'Ganjil'
+          : 'Genap';
+
       const seed = selectQuestionSeed(
         params.fase,
         group.bentuk,
@@ -1310,7 +1434,7 @@ export function buildCustomFallbackPackage(
         no - 1,
         usedStimuli,
         params.kelas,
-        targetSemester
+        questionSemester
       );
       const elemen = preferredElemen;
       const levelCode = diffAlloc.sequence[no - 1] ?? 'L2';
@@ -1324,30 +1448,33 @@ export function buildCustomFallbackPackage(
       };
       const bloomLabel = bloomMap[levelCode];
 
-      const matchingChapterTopic = chapterTopicsForClass.find((ct) =>
+      const matchingChapterCandidates = chapterTopicsForClass.filter((ct) =>
         ct.elemen.includes(elemen)
       );
+      const matchingChapterTopic =
+        matchingChapterCandidates.find((ct) => ct.semester === questionSemester) ||
+        matchingChapterCandidates[(no - 1) % Math.max(1, matchingChapterCandidates.length)];
 
       const cpText = isCombinedPkg
-        ? seed.cpRingkas ||
-          matchingChapterTopic?.rumusanTP ||
+        ? matchingChapterTopic?.rumusanTP ||
+          seed.cpRingkas ||
           params.capaianPembelajaranOpsional?.trim() ||
-          'Memahami dan mengamalkan ajaran Islam secara tepat.'
-        : no === 1 && params.capaianPembelajaranOpsional?.trim()
-        ? params.capaianPembelajaranOpsional.trim()
-        : seed.cpRingkas ||
+          'Murid memahami dan mengamalkan ajaran Islam secara tepat.'
+        : selectedSingleTopic?.rumusanTP ||
           params.capaianPembelajaranOpsional?.trim() ||
-          'Memahami dan mengamalkan ajaran Islam secara tepat.';
+          seed.cpRingkas ||
+          'Murid memahami dan mengamalkan ajaran Islam secara tepat.';
 
       const materiPokok = isCombinedPkg
-        ? seed.materiPokok ||
-          matchingChapterTopic?.materiPokok ||
+        ? matchingChapterTopic?.materiPokok ||
+          seed.materiPokok ||
           `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`
-        : no === 1 && params.topikMateri?.trim()
-        ? params.topikMateri.trim()
-        : seed.materiPokok ||
-          params.topikMateri?.trim() ||
-          `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
+        : selectedSingleTopic?.materiPokok ||
+          (no === 1 && params.topikMateri?.trim()
+            ? params.topikMateri.trim()
+            : seed.materiPokok ||
+              params.topikMateri?.trim() ||
+              `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`);
 
       let indikatorABCD = '';
       if (group.bentuk === 'Pilihan Ganda') {
@@ -1373,7 +1500,9 @@ export function buildCustomFallbackPackage(
       const rowSemesterLabel = formatKelasSemester(
         params.kelas,
         params.jenisUjian,
-        params.semester === 'Semua' ? seed.semester || 'Semua' : params.semester || seed.semester
+        params.semester === 'Semua' || isPaketUS
+          ? seed.semester || questionSemester || 'Semua'
+          : params.semester || seed.semester || targetSemester
       );
 
       kisiKisi.push({
@@ -1662,7 +1791,7 @@ export function buildCustomFallbackPackage(
     });
 
   const semesterDisplay =
-    params.semester === 'Semua'
+    params.semester === 'Semua' || isPaketUS
       ? 'Semester Ganjil & Genap'
       : params.semester
       ? `Semester ${params.semester}`
@@ -1697,13 +1826,20 @@ const PRESET_FASE_B_SD = buildCustomFallbackPackage(
   {
     fase: 'Fase B',
     kelas: 'Kelas 4 SD/MI',
+    semester: 'Ganjil',
     jenjang: 'SD/MI',
-    elemen: ['Akhlak', 'Fikih', 'Al-Qur\'an dan Hadis'],
-    jenisUjian: 'Sumatif Lingkup Materi (TP)',
-    topikMateri: 'Jujur dan Amanah di Sekolah, Ketertiban Salat Berjamaah, serta Kepedulian terhadap Sesama',
+    elemen: [
+      'Al-Qur\'an dan Hadis',
+      'Akidah',
+      'Akhlak',
+      'Fikih',
+      'Sejarah Peradaban Islam (SPI)',
+    ],
+    jenisUjian: 'Sumatif Akhir Semester (SAS)',
+    topikMateri: '📚 [PAKET SAS GANJIL KELAS 4] Gabungan 5 Elemen PAI Kelas 4 Semester Ganjil',
     capaianPembelajaranOpsional:
-      'Murid menerapkan perilaku jujur saat menemukan barang di sekolah, tertib melaksanakan wudu dan salat berjamaah di musala, serta gemar berbagi bekal dengan teman.',
-    nilaiModerasiFokus: 'Qudwah (Keteladanan Akhlak Mulia / Makarim Al-Akhlaq)',
+      'Murid mampu memahami Q.S. Al-Hujurat/49: 13 tentang keragaman, meneladani Asmaulhusna (Al-Malik, Al-Aziz, Al-Quddus, As-Salam, Al-Mu\'min), menerapkan sikap toleransi, memahami tanda usia balig, serta meneladani hijrah Nabi Muhammad saw. ke Madinah.',
+    nilaiModerasiFokus: 'Tasamuh (Toleransi & Menghargai Perbedaan / Al-Samhah)',
     bentukSoalCounts: [
       { bentuk: 'Pilihan Ganda', jumlah: 3 },
       { bentuk: 'Isian Singkat', jumlah: 1 },
@@ -1718,12 +1854,19 @@ const PRESET_FASE_F_SMK = buildCustomFallbackPackage(
   {
     fase: 'Fase F',
     kelas: 'Kelas 12 SMK/MAK',
+    semester: 'Genap',
     jenjang: 'SMA/SMK/MA',
-    elemen: ['Akhlak', 'Fikih', 'Al-Qur\'an dan Hadis'],
+    elemen: [
+      'Al-Qur\'an dan Hadis',
+      'Akidah',
+      'Akhlak',
+      'Fikih',
+      'Sejarah Peradaban Islam (SPI)',
+    ],
     jenisUjian: 'Asesmen Akhir Jenjang (AAJ / Ujian Praktik)',
-    topikMateri: 'Integritas dan Etika Profesi di Tempat Kerja, Muamalah E-Commerce, serta Toleransi Masyarakat Majemuk',
+    topikMateri: '🎓 [PAKET US / ASESMEN AKHIR JENJANG SMA/SMK] Gabungan Materi Kelas 10, 11 & 12',
     capaianPembelajaranOpsional:
-      'Murid menerapkan integritas dan etos kerja Islami (Q.S. At-Taubah: 105) saat magang/bekerja, mengevaluasi transaksi digital, serta bekerja sama dalam kebaikan di masyarakat majemuk.',
+      'Murid mampu menganalisis ayat-ayat Al-Qur\'an tentang berkompetisi dalam kebaikan, etos kerja, ilmu pengetahuan, dan toleransi; menghayati syu\'abul iman dan maqashid syariah; mengamalkan adab digital dan akhlak profesi; menganalisis fikih muamalah, mawaris, dan ijtihad; serta meneladani peradaban Islam dunia.',
     nilaiModerasiFokus: 'I\'tidal (Tegak Lurus & Berlaku Adil)',
     bentukSoalCounts: [
       { bentuk: 'Pilihan Ganda', jumlah: 3 },
@@ -1739,8 +1882,9 @@ export const PRESET_PACKAGES: AssessmentPackage[] = [
   BASE_PRESET_PACKAGES[0], // Fase D (Kelas 8 SMP)
   BASE_PRESET_PACKAGES[1], // Fase E (Kelas 10 SMA)
   BASE_PRESET_PACKAGES[2], // Fase A (Kelas 1 SD)
-  PRESET_FASE_B_SD,        // Fase B (Kelas 4 SD)
+  PRESET_FASE_B_SD,        // Fase B (Kelas 4 SD — Paket SAS Ganjil)
   BASE_PRESET_PACKAGES[3], // Fase C (Kelas 5 SD)
-  PRESET_FASE_F_SMK,       // Fase F (Kelas 12 SMK)
+  PRESET_FASE_F_SMK,       // Fase F (Kelas 12 SMK — Paket US/AAJ)
 ];
+
 

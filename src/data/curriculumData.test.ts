@@ -5,7 +5,11 @@ import {
   getTopicsForFaseAndKelas,
   isPaketGabunganTopic,
 } from './curriculumData';
-import { buildCustomFallbackPackage } from './presetPackages';
+import {
+  buildCustomFallbackPackage,
+  CURRICULUM_TOPICS_BY_CLASS_SEMESTER,
+  PAKET_SAS_SAT_US_OPTIONS,
+} from './presetPackages';
 import { FaseCode } from '../types/assessment';
 
 test('CURRICULUM_DATABASE_CP020 has 120+ official entries across all 12 grades and 2 semesters', () => {
@@ -165,3 +169,56 @@ test('getTopicsForFaseAndKelas filters strictly by Semester Ganjil vs Genap and 
   const uniqueElements = new Set(generatedPkg.butirSoal.map((q) => q.elemen));
   assert.equal(uniqueElements.size, 5, '5 questions in Paket SAS must span all 5 PAI elements evenly');
 });
+
+test('presetPackages.ts exports CURRICULUM_TOPICS_BY_CLASS_SEMESTER and PAKET_SAS_SAT_US_OPTIONS for all levels', () => {
+  assert.ok(PAKET_SAS_SAT_US_OPTIONS.length >= 48, 'Must include at least 48 combined PAKET SAS/SAT/US/ATS options');
+  const classesToCheck = [
+    'Kelas 1 SD/MI',
+    'Kelas 2 SD/MI',
+    'Kelas 3 SD/MI',
+    'Kelas 4 SD/MI',
+    'Kelas 5 SD/MI',
+    'Kelas 6 SD/MI',
+    'Kelas 7 SMP/MTs',
+    'Kelas 8 SMP/MTs',
+    'Kelas 9 SMP/MTs',
+    'Kelas 10 SMA/MA',
+    'Kelas 11 SMA/MA',
+    'Kelas 12 SMA/MA',
+    'Kelas 12 SMK/MAK',
+  ];
+
+  for (const kls of classesToCheck) {
+    const entry = CURRICULUM_TOPICS_BY_CLASS_SEMESTER[kls];
+    assert.ok(entry, `CURRICULUM_TOPICS_BY_CLASS_SEMESTER must contain ${kls}`);
+    assert.ok(entry.Ganjil.length >= 7, `${kls} Ganjil must have at least 7 options`);
+    assert.ok(entry.Genap.length >= 7, `${kls} Genap must have at least 7 options`);
+    assert.ok(entry.paketUjianOptions.length >= 4, `${kls} must have at least 4 PAKET SAS/SAT/US/ATS options`);
+  }
+
+  // Test PAKET US generation for Kelas 6 SD/MI
+  const kls6US = CURRICULUM_TOPICS_BY_CLASS_SEMESTER['Kelas 6 SD/MI'].paketUjianOptions.find((t) =>
+    t.judulTopik.includes('PAKET US')
+  );
+  assert.ok(kls6US, 'Kelas 6 SD/MI must have a PAKET US option');
+  const usPkg = buildCustomFallbackPackage({
+    fase: 'Fase C',
+    kelas: 'Kelas 6 SD/MI',
+    semester: 'Genap',
+    jenjang: 'SD/MI',
+    elemen: kls6US.elemen,
+    jenisUjian: 'Asesmen Akhir Jenjang (AAJ / Ujian Praktik)',
+    topikMateri: kls6US.judulTopik,
+    capaianPembelajaranOpsional: kls6US.rumusanTP,
+    nilaiModerasiFokus: 'Tawassuth (Mengambil Jalan Tengah / Moderat)',
+    bentukSoalCounts: [
+      { bentuk: 'Pilihan Ganda', jumlah: 5 },
+      { bentuk: 'Uraian', jumlah: 1 },
+    ],
+    komposisiKesulitan: { mudahL1: 30, sedangL2: 50, hotsL3: 20 },
+  });
+  assert.equal(usPkg.kisiKisi.length, 6);
+  const usElements = new Set(usPkg.kisiKisi.map((r) => r.elemen));
+  assert.equal(usElements.size, 5, 'PAKET US must cover all 5 PAI elements');
+});
+
