@@ -205,7 +205,11 @@ export function getFaseProfile(fase: FaseCode): FaseAdaptationProfile {
 /**
  * Derives an official Roman numeral Kelas/Semester label (e.g., "V / Ganjil", "VIII / Genap").
  */
-export function formatKelasSemester(kelas: string, jenisUjian?: string): string {
+export function formatKelasSemester(
+  kelas: string,
+  jenisUjian?: string,
+  semester?: string
+): string {
   const match = kelas.match(/\d+/);
   const num = match ? parseInt(match[0], 10) : 5;
   const romanMap: Record<number, string> = {
@@ -223,10 +227,15 @@ export function formatKelasSemester(kelas: string, jenisUjian?: string): string 
     12: 'XII',
   };
   const roman = romanMap[num] || String(num);
+  if (semester === 'Ganjil' || semester === 'Genap') {
+    return `${roman} / ${semester}`;
+  }
+  if (semester === 'Semua') {
+    return `${roman} / Ganjil & Genap`;
+  }
   const isGenap =
     jenisUjian?.includes('Akhir Jenjang') ||
-    jenisUjian?.includes('SAS') ||
-    num % 2 === 0;
+    jenisUjian?.includes('Genap');
   return `${roman} / ${isGenap ? 'Genap' : 'Ganjil'}`;
 }
 

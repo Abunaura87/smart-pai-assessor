@@ -94,22 +94,18 @@ export default function App() {
   };
 
   const handleParametersChange = (nextParams: AssessmentParameters) => {
-    const faseChanged = nextParams.fase !== parameters.fase;
-    const kelasChanged = nextParams.kelas !== parameters.kelas;
     setParameters(nextParams);
 
-    if (faseChanged || kelasChanged) {
-      const matchingPreset =
-        PRESET_PACKAGES.find(
-          (p) => p.parameters.fase === nextParams.fase && p.parameters.kelas === nextParams.kelas
-        ) || (faseChanged ? PRESET_PACKAGES.find((p) => p.parameters.fase === nextParams.fase) : null);
-      const nextPkg = matchingPreset || buildCustomFallbackPackage(nextParams);
-      setActivePackage(nextPkg);
-      syncKopForPackage(nextPkg);
-      setStatusMessage(
-        `Parameter dan pratinjau dokumen disesuaikan ke ${nextParams.fase} (${nextParams.kelas}).`
-      );
-    }
+    const nextPkg = buildCustomFallbackPackage(nextParams);
+    setActivePackage(nextPkg);
+    syncKopForPackage(nextPkg);
+    const smtText =
+      nextParams.semester === 'Semua'
+        ? 'Semester Ganjil & Genap'
+        : `Semester ${nextParams.semester || 'Ganjil'}`;
+    setStatusMessage(
+      `Parameter dan pratinjau dokumen disesuaikan: ${nextParams.fase} · ${nextParams.kelas} · ${smtText}.`
+    );
   };
 
   const handleGenerateAssessment = async (paramsToGenerate: AssessmentParameters) => {

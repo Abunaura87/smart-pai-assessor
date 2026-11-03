@@ -2109,6 +2109,14 @@ export const FASE_NARRATIVE_BANK: Record<FaseCode, NarrativeSeed[]> = {
  * Selects a distinct, age-appropriate question seed for a given Fase, Kelas, and Semester,
  * GUARANTEEING 100% strict phase and grade isolation.
  */
+function isSameGrade(seedKelas?: string, targetKelas?: string): boolean {
+  if (!seedKelas || !targetKelas) return false;
+  if (seedKelas === targetKelas) return true;
+  const m1 = seedKelas.match(/\b(\d{1,2})\b/);
+  const m2 = targetKelas.match(/\b(\d{1,2})\b/);
+  return Boolean(m1 && m2 && m1[1] === m2[1]);
+}
+
 export function selectQuestionSeed(
   fase: FaseCode,
   bentuk: BentukSoalType,
@@ -2130,65 +2138,86 @@ export function selectQuestionSeed(
     pool = phasePool.pg;
   }
 
-  // 1. Try matching preferredElemen + targetKelas + targetSemester and not yet used
+  const allSeedsInThisFase = [...phasePool.pg, ...phasePool.isian, ...phasePool.uraian];
+  const getSignature = (s: NarrativeSeed) =>
+    s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian || s.stimulus;
+
+  // 1. Try matching preferredElemen + targetKelas + targetSemester and not yet used in pool
   if (targetKelas) {
     const classElemenUnused = pool.filter(
       (s) =>
         s.elemen === preferredElemen &&
-        s.kelas === targetKelas &&
+        isSameGrade(s.kelas, targetKelas) &&
         (!targetSemester || s.semester === targetSemester) &&
-        !usedStimuli.has(s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian)
+        !usedStimuli.has(getSignature(s))
     );
     if (classElemenUnused.length > 0) {
       const chosen = classElemenUnused[questionIndex % classElemenUnused.length];
-      usedStimuli.add(chosen.pertanyaanPG || chosen.pertanyaanIsian || chosen.pertanyaanUraian);
+      usedStimuli.add(getSignature(chosen));
       return chosen;
     }
 
-    // Try any in that class
+    // Try any in that class + semester in pool
     const anyClassUnused = pool.filter(
       (s) =>
-        s.kelas === targetKelas &&
+        isSameGrade(s.kelas, targetKelas) &&
         (!targetSemester || s.semester === targetSemester) &&
-        !usedStimuli.has(s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian)
+        !usedStimuli.has(getSignature(s))
     );
     if (anyClassUnused.length > 0) {
       const chosen = anyClassUnused[questionIndex % anyClassUnused.length];
-      usedStimuli.add(chosen.pertanyaanPG || chosen.pertanyaanIsian || chosen.pertanyaanUraian);
+      usedStimuli.add(getSignature(chosen));
+      return chosen;
+    }
+
+    // Try matching class + semester across allSeedsInThisFase (since all seeds have PG, Isian, and Uraian fields)
+    const anyFaseClassSemesterUnused = allSeedsInThisFase.filter(
+      (s) =>
+        isSameGrade(s.kelas, targetKelas) &&
+        (!targetSemester || s.semester === targetSemester) &&
+        !usedStimuli.has(getSignature(s))
+    );
+    if (anyFaseClassSemesterUnused.length > 0) {
+      const chosen =
+        anyFaseClassSemesterUnused[questionIndex % anyFaseClassSemesterUnused.length];
+      usedStimuli.add(getSignature(chosen));
+      return chosen;
+    }
+
+    // Try matching class (either semester) in this phase before crossing to sibling grade in same phase
+    const anyFaseClassUnused = allSeedsInThisFase.filter(
+      (s) => isSameGrade(s.kelas, targetKelas) && !usedStimuli.has(getSignature(s))
+    );
+    if (anyFaseClassUnused.length > 0) {
+      const chosen = anyFaseClassUnused[questionIndex % anyFaseClassUnused.length];
+      usedStimuli.add(getSignature(chosen));
       return chosen;
     }
   }
 
   // 2. Try matching preferredElemen and not yet used in this pool
   const matchingElemenUnused = pool.filter(
-    (s) =>
-      s.elemen === preferredElemen &&
-      !usedStimuli.has(s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian)
+    (s) => s.elemen === preferredElemen && !usedStimuli.has(getSignature(s))
   );
   if (matchingElemenUnused.length > 0) {
     const chosen = matchingElemenUnused[questionIndex % matchingElemenUnused.length];
-    usedStimuli.add(chosen.pertanyaanPG || chosen.pertanyaanIsian || chosen.pertanyaanUraian);
+    usedStimuli.add(getSignature(chosen));
     return chosen;
   }
 
   // 3. Try any unused in this specific pool
-  const anyUnusedInPool = pool.filter(
-    (s) => !usedStimuli.has(s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian)
-  );
+  const anyUnusedInPool = pool.filter((s) => !usedStimuli.has(getSignature(s)));
   if (anyUnusedInPool.length > 0) {
     const chosen = anyUnusedInPool[questionIndex % anyUnusedInPool.length];
-    usedStimuli.add(chosen.pertanyaanPG || chosen.pertanyaanIsian || chosen.pertanyaanUraian);
+    usedStimuli.add(getSignature(chosen));
     return chosen;
   }
 
   // 4. Try any unused across all pools OF THIS FASE ONLY
-  const allSeedsInThisFase = [...phasePool.pg, ...phasePool.isian, ...phasePool.uraian];
-  const anyUnusedInFase = allSeedsInThisFase.filter(
-    (s) => !usedStimuli.has(s.pertanyaanPG || s.pertanyaanIsian || s.pertanyaanUraian)
-  );
+  const anyUnusedInFase = allSeedsInThisFase.filter((s) => !usedStimuli.has(getSignature(s)));
   if (anyUnusedInFase.length > 0) {
     const chosen = anyUnusedInFase[questionIndex % anyUnusedInFase.length];
-    usedStimuli.add(chosen.pertanyaanPG || chosen.pertanyaanIsian || chosen.pertanyaanUraian);
+    usedStimuli.add(getSignature(chosen));
     return chosen;
   }
 

@@ -86,7 +86,11 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
     </div>
   );
 
-  const defaultKelasSmt = formatKelasSemester(pkg.parameters.kelas, pkg.parameters.jenisUjian);
+  const defaultKelasSmt = formatKelasSemester(
+    pkg.parameters.kelas,
+    pkg.parameters.jenisUjian,
+    pkg.parameters.semester
+  );
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
   const practiceInstrument = getPracticeInstrument(pkg);
 

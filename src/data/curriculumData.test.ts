@@ -93,3 +93,20 @@ test('Required CP 020/2026 flagship topics exist in curriculum database', () => 
   assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Muamalah')));
   assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Waris') || t.judulTopik.includes('Mawaris')));
 });
+
+test('getTopicsForFaseAndKelas filters strictly by Semester Ganjil vs Genap', () => {
+  const kls5Ganjil = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Ganjil');
+  const kls5Genap = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Genap');
+  const kls5Semua = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Semua');
+
+  assert.ok(kls5Ganjil.length >= 2, 'Kelas 5 Ganjil must have at least 2 topics');
+  assert.ok(kls5Genap.length >= 2, 'Kelas 5 Genap must have at least 2 topics');
+  assert.ok(kls5Ganjil.every((t) => t.semester === 'Ganjil'));
+  assert.ok(kls5Genap.every((t) => t.semester === 'Genap'));
+  assert.equal(kls5Semua.length, kls5Ganjil.length + kls5Genap.length);
+
+  // Verify Kelas 5 Ganjil contains Al-Ma'un & Zakat Fitrah, while Genap contains Hari Akhir & Haji/Kurban
+  assert.ok(kls5Ganjil.some((t) => t.judulTopik.includes('Al-Ma\'un')));
+  assert.ok(kls5Genap.some((t) => t.judulTopik.includes('Hari Akhir')));
+});
+

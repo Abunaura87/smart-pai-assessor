@@ -26,6 +26,8 @@ export type BentukSoalType =
 
 export type LevelKognitif = 'L1' | 'L2' | 'L3';
 
+export type SemesterOption = 'Ganjil' | 'Genap' | 'Semua';
+
 export interface FaseAdaptationProfile {
   fase: FaseCode;
   jenjang: JenjangPendidikan;
@@ -53,6 +55,7 @@ export interface BentukSoalCount {
 export interface AssessmentParameters {
   fase: FaseCode;
   kelas: string;
+  semester?: SemesterOption;
   jenjang: JenjangPendidikan;
   elemen: ElemenPAI[];
   jenisUjian: JenisUjian;

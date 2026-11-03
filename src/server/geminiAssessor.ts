@@ -7,7 +7,7 @@ import {
   PemetaanUraianRow,
 } from '../types/assessment';
 import { buildCustomFallbackPackage } from '../data/presetPackages';
-import { calculateDifficultyAllocation, getFaseProfile } from '../utils/paiRules';
+import { calculateDifficultyAllocation, formatKelasSemester, getFaseProfile } from '../utils/paiRules';
 
 export const SYSTEM_INSTRUCTION = `Anda adalah "Smart PAI Assessor", asisten AI pakar asesmen dan perancangan evaluasi pembelajaran Pendidikan Agama Islam dan Budi Pekerti (PAIBP) untuk seluruh jenjang (SD/MI, SMP/MTs, SMA/SMK/MA).
 Anda menguasai secara presisi regulasi Capaian Pembelajaran (CP) PAIBP terbaru (Kepka Nomor 020 Tahun 2026 / Kurikulum Merdeka), kaidah Taksonomi Bloom yang disempurnakan, serta pola penulisan soal standar KKG/MGMP PAI dan Kementerian Agama RI (khususnya standar KKG PAI Kecamatan Lalembuu, Kab. Konawe Selatan).
@@ -367,7 +367,10 @@ export function normalizeGeneratedPackage(
       capaianTujuanPembelajaran: sanitizeMuridTerms(
         existingRow?.capaianTujuanPembelajaran || fbRow.capaianTujuanPembelajaran
       ),
-      kelasSmt: existingRow?.kelasSmt || fbRow.kelasSmt || profile.defaultSemester,
+      kelasSmt:
+        existingRow?.kelasSmt ||
+        fbRow.kelasSmt ||
+        formatKelasSemester(parameters.kelas, parameters.jenisUjian, parameters.semester),
       materiPokok: sanitizeMuridTerms(
         existingRow?.materiPokok || soal.materiPokok || fbRow.materiPokok
       ),
@@ -449,8 +452,19 @@ export async function generateAssessmentWithGemini(
     httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
   });
 
+  const activeSemesterLabel =
+    parameters.semester === 'Semua'
+      ? 'Semua Semester (Ganjil & Genap)'
+      : `Semester ${parameters.semester || 'Ganjil'}`;
+  const formattedKelasSmt = formatKelasSemester(
+    parameters.kelas,
+    parameters.jenisUjian,
+    parameters.semester
+  );
+
   const prompt = `Susunlah Paket Instrumen Asesmen PAIBP Lengkap Standar KKG PAI & CP 020/2026 untuk:
 - Fase & Jenjang: ${parameters.fase} — ${parameters.kelas} (${parameters.jenjang})
+- Semester Pembelajaran: ${activeSemesterLabel} (Kolom Kelas/Smt pada Kisi-Kisi: "${formattedKelasSmt}")
 - Karakteristik Usia & Gaya Soal: ${profile.karakteristik}
 - Aturan Opsi Jawaban: Wajib tepat ${profile.optionCount} opsi (${profile.optionLabels.join(', ')})
 - Elemen PAIBP: ${parameters.elemen.join(', ')}

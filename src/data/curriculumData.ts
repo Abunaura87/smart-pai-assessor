@@ -544,6 +544,30 @@ export const CURRICULUM_DATABASE_CP020: CurriculumTopic[] = [
       'Murid mampu menghitung nisab dan besaran zakat mal (emas, perak, perniagaan, pertanian, dan profesi) serta menyimpulkan fungsinya dalam mengentaskan kemiskinan.',
     rekomendasiModerasi: 'I\'tidal (Tegak Lurus & Berlaku Adil)',
   },
+  {
+    id: 'fase-d-kls9-haji-umrah',
+    fase: 'Fase D',
+    kelas: 'Kelas 9 SMP/MTs',
+    semester: 'Genap',
+    elemen: ['Fikih'],
+    judulTopik: 'Ketentuan Ibadah Haji dan Umrah (Rukun, Wajib, Sunah & Miqat)',
+    materiPokok: 'Syarat, Rukun, Wajib Haji/Umrah, Larangan Ihram, dan Hikmah Persaudaraan Global',
+    rumusanTP:
+      'Murid mampu menganalisis ketentuan syarat, rukun, dan wajib haji serta umrah, membedakan pelaksanaan haji ifrad, tamattu\', dan qiran, serta menghayati nilai persaudaraan umat Islam sedunia.',
+    rekomendasiModerasi: 'Tasamuh (Toleransi & Menghargai Perbedaan / Al-Samhah)',
+  },
+  {
+    id: 'fase-d-kls9-tradisi-nusantara',
+    fase: 'Fase D',
+    kelas: 'Kelas 9 SMP/MTs',
+    semester: 'Genap',
+    elemen: ['Sejarah Peradaban Islam (SPI)', 'Akhlak'],
+    judulTopik: 'Tradisi Islam Nusantara & Pelestarian Kearifan Budaya Lokal',
+    materiPokok: 'Harmoni Adat dan Syariat (Halalbihalal, Sekaten, Tabot, Grebeg) dalam Bingkai NKRI',
+    rumusanTP:
+      'Murid mampu mengapresiasi keberagaman tradisi dan seni budaya Islam di Nusantara yang selaras dengan nilai tauhid serta merawat kerukunan masyarakat majemuk.',
+    rekomendasiModerasi: 'Muwathanah (Cinta Tanah Air & Komitmen Kebangsaan)',
+  },
 
   // =========================================================================
   // FASE E & F: KELAS 10–12 SMA/SMK/MA (USIA 16–18 TAHUN)
@@ -658,23 +682,43 @@ export const CURRICULUM_DATABASE_CP020: CurriculumTopic[] = [
   },
 ];
 
+function extractGradeNumber(kelasStr: string): string | null {
+  const match = kelasStr.match(/\b(\d{1,2})\b/);
+  return match ? match[1] : null;
+}
+
 /**
- * Filter topics based on active Fase and selected Kelas.
- * Returns topics specifically for that class plus any general topics in that phase.
+ * Filter topics based on active Fase, selected Kelas, and optional Semester ('Ganjil' | 'Genap' | 'Semua').
+ * Returns topics specifically for that class (and semester if specified).
  */
 export function getTopicsForFaseAndKelas(
   fase: FaseCode,
-  kelas: string
+  kelas: string,
+  semester?: 'Ganjil' | 'Genap' | 'Semua'
 ): CurriculumTopic[] {
-  // 1. Exact match on both fase and kelas
-  const exactMatch = CURRICULUM_DATABASE_CP020.filter(
-    (t) => t.fase === fase && (t.kelas === kelas || t.kelas === 'Semua Kelas')
-  );
+  const targetGradeNum = extractGradeNumber(kelas);
 
-  if (exactMatch.length > 0) {
-    return exactMatch;
+  // 1. Filter by Fase and Kelas (matching exact string or same grade number e.g. Kelas 12 SMK/MAK -> 12)
+  let classMatched = CURRICULUM_DATABASE_CP020.filter((t) => {
+    if (t.fase !== fase) return false;
+    if (t.kelas === kelas || t.kelas === 'Semua Kelas') return true;
+    const topicGradeNum = extractGradeNumber(t.kelas);
+    return targetGradeNum !== null && topicGradeNum === targetGradeNum;
+  });
+
+  if (classMatched.length === 0) {
+    classMatched = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === fase);
   }
 
-  // 2. Fallback to all topics within the same Fase
-  return CURRICULUM_DATABASE_CP020.filter((t) => t.fase === fase);
+  // 2. Filter by Semester if 'Ganjil' or 'Genap' is selected
+  if (semester && semester !== 'Semua') {
+    const semesterMatched = classMatched.filter(
+      (t) => !t.semester || t.semester === 'Semua' || t.semester === semester
+    );
+    if (semesterMatched.length > 0) {
+      return semesterMatched;
+    }
+  }
+
+  return classMatched;
 }

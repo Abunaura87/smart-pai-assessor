@@ -65,12 +65,18 @@ export function resolveLogoUrl(
 export function getDefaultKopConfig(pkg: AssessmentPackage): KopSoalConfig {
   const isUS =
     pkg.parameters.jenisUjian === 'Asesmen Akhir Jenjang (AAJ / Ujian Praktik)';
+  const smtUpper =
+    pkg.parameters.semester === 'Ganjil'
+      ? ' GANJIL'
+      : pkg.parameters.semester === 'Genap'
+      ? ' GENAP'
+      : '';
   const jenisUpper = isUS
     ? 'UJIAN SEKOLAH ( US ) PENDIDIKAN AGAMA ISLAM DAN BUDI PEKERTI'
     : pkg.parameters.jenisUjian === 'Sumatif Akhir Semester (SAS)'
-    ? 'SUMATIF AKHIR SEMESTER'
+    ? `SUMATIF AKHIR SEMESTER${smtUpper}`
     : pkg.parameters.jenisUjian === 'Asesmen Tengah Semester (ATS)'
-    ? 'ASESMEN TENGAH SEMESTER (ATS)'
+    ? `ASESMEN TENGAH SEMESTER (ATS)${smtUpper}`
     : pkg.parameters.jenisUjian.toUpperCase();
 
   return {
@@ -191,7 +197,8 @@ export function buildRichDocumentHtml(
   const { studentSheetOnly = false } = options;
   const defaultKelasSmt = formatKelasSemester(
     pkg.parameters.kelas,
-    pkg.parameters.jenisUjian
+    pkg.parameters.jenisUjian,
+    pkg.parameters.semester
   );
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
   const logoKiri = resolveLogoUrl(kop.logoKiriPreset, kop.logoKiriCustomUrl);
@@ -1087,7 +1094,8 @@ export function buildPlainTextWithoutMarkdown(
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
   const defaultKelasSmt = formatKelasSemester(
     pkg.parameters.kelas,
-    pkg.parameters.jenisUjian
+    pkg.parameters.jenisUjian,
+    pkg.parameters.semester
   );
   const pgSoal = pkg.butirSoal.filter(
     (s) => s.bentukSoal !== 'Uraian' && s.bentukSoal !== 'Isian Singkat'

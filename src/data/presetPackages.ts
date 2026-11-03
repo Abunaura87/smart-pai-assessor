@@ -7,7 +7,7 @@ import {
   PemetaanUraianRow,
   QuestionItem,
 } from '../types/assessment';
-import { calculateDifficultyAllocation, getFaseProfile } from '../utils/paiRules';
+import { calculateDifficultyAllocation, formatKelasSemester, getFaseProfile } from '../utils/paiRules';
 import { selectDistinctNarrativeSeed, selectQuestionSeed } from './narrativeBank';
 
 const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
@@ -18,6 +18,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
     parameters: {
       fase: 'Fase D',
       kelas: 'Kelas 8 SMP/MTs',
+      semester: 'Genap',
       jenjang: 'SMP/MTs',
       elemen: ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'],
       jenisUjian: 'Sumatif Akhir Semester (SAS)',
@@ -1268,8 +1269,14 @@ export function buildCustomFallbackPackage(
     params.elemen.length > 0 ? params.elemen : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
 
   let currentNo = 1;
-  const targetSemester: 'Ganjil' | 'Genap' =
-    params.jenisUjian?.includes('Genap') || params.jenisUjian?.includes('Akhir Jenjang')
+  const targetSemester: 'Ganjil' | 'Genap' | undefined =
+    params.semester === 'Semua'
+      ? undefined
+      : params.semester === 'Genap'
+      ? 'Genap'
+      : params.semester === 'Ganjil'
+      ? 'Ganjil'
+      : params.jenisUjian?.includes('Genap') || params.jenisUjian?.includes('Akhir Jenjang')
       ? 'Genap'
       : 'Ganjil';
 
@@ -1299,13 +1306,17 @@ export function buildCustomFallbackPackage(
       const bloomLabel = bloomMap[levelCode];
 
       const cpText =
-        params.capaianPembelajaranOpsional?.trim() ||
-        seed.cpRingkas ||
-        'Memahami dan mengamalkan ajaran Islam secara tepat.';
+        no === 1 && params.capaianPembelajaranOpsional?.trim()
+          ? params.capaianPembelajaranOpsional.trim()
+          : seed.cpRingkas ||
+            params.capaianPembelajaranOpsional?.trim() ||
+            'Memahami dan mengamalkan ajaran Islam secara tepat.';
       const materiPokok =
-        params.topikMateri?.trim() ||
-        seed.materiPokok ||
-        `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
+        no === 1 && params.topikMateri?.trim()
+          ? params.topikMateri.trim()
+          : seed.materiPokok ||
+            params.topikMateri?.trim() ||
+            `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
 
       let indikatorABCD = '';
       if (group.bentuk === 'Pilihan Ganda') {
@@ -1328,11 +1339,17 @@ export function buildCustomFallbackPackage(
         indikatorABCD = `Murid dapat menganalisis ${seed.indikatorTopik} dengan tepat.`;
       }
 
+      const rowSemesterLabel = formatKelasSemester(
+        params.kelas,
+        params.jenisUjian,
+        params.semester === 'Semua' ? seed.semester || 'Semua' : params.semester || seed.semester
+      );
+
       kisiKisi.push({
         no,
         elemen,
         capaianTujuanPembelajaran: cpText,
-        kelasSmt: profile.defaultSemester,
+        kelasSmt: rowSemesterLabel,
         materiPokok,
         indikatorSoalABCD: indikatorABCD,
         levelKognitif: `${levelCode} (${bloomLabel})`,
@@ -1613,15 +1630,22 @@ export function buildCustomFallbackPackage(
       };
     });
 
+  const semesterDisplay =
+    params.semester === 'Semua'
+      ? 'Semester Ganjil & Genap'
+      : params.semester
+      ? `Semester ${params.semester}`
+      : `Semester ${targetSemester || 'Ganjil'}`;
+
   return {
     id: customId || `custom-${Date.now()}`,
-    judulAsesmen: `Instrumen ${params.jenisUjian} PAIBP — ${params.topikMateri || 'Kurikulum Merdeka'}`,
+    judulAsesmen: `Instrumen ${params.jenisUjian} (${semesterDisplay}) PAIBP — ${params.topikMateri || 'Kurikulum Merdeka'}`,
     createdAt: new Date().toISOString().slice(0, 10),
     parameters: params,
     identitas: {
       satuanPendidikan: `${params.jenjang} (Kurikulum Merdeka — Kepka No. 020 Tahun 2026)`,
       mataPelajaran: 'Pendidikan Agama Islam dan Budi Pekerti (PAIBP)',
-      jenjangKelasFase: `${params.jenjang} — ${params.kelas} (${params.fase})`,
+      jenjangKelasFase: `${params.jenjang} — ${params.kelas} (${params.fase} · ${semesterDisplay})`,
       jenisAsesmen: params.jenisUjian,
       alokasiWaktu: `${Math.max(30, totalSoal * 8)} Menit`,
       kurikulumAcuan: `Kepka No. 020 Tahun 2026 / Kurikulum Merdeka ${params.fase} (${profile.bloomRange}, ${profile.optionLabels.join('–')})`,
