@@ -25,9 +25,15 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
   body {
     background-color: #FFFFFF !important;
     color: #000000 !important;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 11.5pt !important;
   }
   .no-print {
     display: none !important;
@@ -37,5 +43,16 @@
   }
   .print-break-inside-avoid {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+  .print-clean-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
   }
 }

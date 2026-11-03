@@ -12,6 +12,14 @@ import {
   validateAssessmentPackage,
 } from './paiRules';
 import { PRESET_PACKAGES, buildCustomFallbackPackage } from '../data/presetPackages';
+import {
+  buildPlainTextWithoutMarkdown,
+  buildRichDocumentHtml,
+  buildWordDocContent,
+  getDefaultKopConfig,
+  getOptionColumnsMode,
+} from './documentExporter';
+
 
 test('Phase adaptation rules enforce correct option counts for SD, SMP, and SMA/SMK', () => {
   const faseA = getFaseProfile('Fase A');
@@ -198,3 +206,54 @@ test('Zero-Boilerplate & Age-Psychology rules enforce unique stimuli, no topic-e
     }
   }
 });
+
+test('Rich HTML, Plain Text fallback, and Word .doc export contain zero raw Markdown symbols and support KKG & US modes', () => {
+  const pkg = PRESET_PACKAGES[0];
+  const kopKkg = getDefaultKopConfig(pkg);
+  assert.equal(kopKkg.barisKop1, 'PEMERINTAH KABUPATEN KONAWE SELATAN');
+  assert.equal(kopKkg.barisKop3, 'KECAMATAN LALEMBUU');
+  assert.equal(kopKkg.tahunPelajaran, 'TP. 2025/2026');
+
+  const richHtmlKkg = buildRichDocumentHtml(pkg, kopKkg);
+  const plainTextKkg = buildPlainTextWithoutMarkdown(pkg, kopKkg);
+  const wordDocKkg = buildWordDocContent(pkg, kopKkg);
+
+  // Must not contain raw Markdown headers or bold markers
+  assert.equal(/###\s/.test(richHtmlKkg), false, 'Rich HTML must not contain ### markdown');
+  assert.equal(/\*\*[A-Za-z]/.test(richHtmlKkg), false, 'Rich HTML must not contain ** markdown');
+  assert.equal(/###\s/.test(plainTextKkg), false, 'Plain text fallback must not contain ### markdown');
+  assert.equal(/\*\*[A-Za-z]/.test(plainTextKkg), false, 'Plain text fallback must not contain ** markdown');
+
+  // Must include official KKG elements
+  assert.ok(richHtmlKkg.includes('border-bottom:3px double #000000'), 'Must include double bottom border on Kop Surat');
+  assert.ok(richHtmlKkg.includes('PEMERINTAH KABUPATEN KONAWE SELATAN'));
+  assert.ok(richHtmlKkg.includes('INSTRUMEN ASESMEN'));
+  assert.ok(richHtmlKkg.includes('ASPEK AL-QUR\'AN YANG DINILAI'));
+  assert.ok(richHtmlKkg.includes('ASPEK FIQIH YANG DINILAI'));
+  assert.ok(richHtmlKkg.includes('ASPEK IBADAH YANG DINILAI'));
+
+  // Word document wrapper must include Office Word namespace and Times New Roman 12pt
+  assert.ok(wordDocKkg.includes('xmlns:w="urn:schemas-microsoft-com:office:word"'));
+  assert.ok(wordDocKkg.includes('Times New Roman'));
+  assert.ok(wordDocKkg.includes('12pt'));
+
+  // Mode B: Ujian Sekolah / Akhir Jenjang
+  const kopUs = { ...kopKkg, layoutMode: 'us' as const };
+  const richHtmlUs = buildRichDocumentHtml(pkg, kopUs);
+  assert.ok(richHtmlUs.includes('PETUNJUK UMUM'), 'US mode must include Cover Petunjuk Umum');
+  assert.ok(richHtmlUs.includes('BERITA ACARA'), 'US mode must include Berita Acara');
+  assert.ok(richHtmlUs.includes('DAFTAR HADIR PESERTA UJIAN SEKOLAH (US)'), 'US mode must include Daftar Hadir');
+  assert.ok(richHtmlUs.includes('LEMBAR JAWABAN'), 'US mode must include Lembar Jawaban (LJK)');
+
+  // Option column mode helper
+  assert.equal(
+    getOptionColumnsMode([
+      { label: 'A', teks: 'Taif' },
+      { label: 'B', teks: 'Yaman' },
+      { label: 'C', teks: 'Mekkah' },
+      { label: 'D', teks: 'Madinah' },
+    ]),
+    '4-col'
+  );
+});
+

@@ -192,3 +192,29 @@ export interface KaidahValidationResult {
   issues: KaidahValidationIssue[];
 }
 
+export type LogoPresetType = 'pemda' | 'kemenag' | 'tutwuri' | 'custom' | 'none';
+
+export type DocumentLayoutMode = 'kkg' | 'us';
+
+export interface KopSoalConfig {
+  layoutMode: DocumentLayoutMode;
+  logoKiriPreset: LogoPresetType;
+  logoKananPreset: LogoPresetType;
+  logoKiriCustomUrl?: string;
+  logoKananCustomUrl?: string;
+  barisKop1: string;
+  barisKop2: string;
+  barisKop3: string;
+  judulAsesmenDokumen: string;
+  tahunPelajaran: string;
+  hariTanggal: string;
+  waktuUjian: string;
+  namaSekolah: string;
+  kabupatenKota: string;
+  namaPengawasPai: string;
+  nipPengawasPai: string;
+  namaGuruPai: string;
+  nipGuruPai: string;
+}
+
+
