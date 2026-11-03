@@ -1298,8 +1298,14 @@ export function buildCustomFallbackPackage(
       };
       const bloomLabel = bloomMap[levelCode];
 
-      const cpText = seed.cpRingkas || params.capaianPembelajaranOpsional?.trim() || 'Memahami dan mengamalkan ajaran Islam secara tepat.';
-      const materiPokok = seed.materiPokok || `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
+      const cpText =
+        params.capaianPembelajaranOpsional?.trim() ||
+        seed.cpRingkas ||
+        'Memahami dan mengamalkan ajaran Islam secara tepat.';
+      const materiPokok =
+        params.topikMateri?.trim() ||
+        seed.materiPokok ||
+        `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
 
       let indikatorABCD = '';
       if (group.bentuk === 'Pilihan Ganda') {

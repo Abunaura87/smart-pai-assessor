@@ -16,6 +16,10 @@ import {
   NILAI_MODERASI_OPTIONS,
   normalizeComposition,
 } from '../utils/paiRules';
+import {
+  CurriculumTopic,
+  getTopicsForFaseAndKelas,
+} from '../data/curriculumData';
 import { KopPejabatForm } from './KopPejabatForm';
 import {
   Sparkles,
@@ -26,6 +30,11 @@ import {
   Settings,
   ChevronDown,
   ChevronUp,
+  Edit3,
+  RotateCcw,
+  Check,
+  Bookmark,
+  Layers,
 } from 'lucide-react';
 
 interface ParameterPanelProps {
@@ -139,28 +148,55 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
 }) => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isKopAccordionOpen, setIsKopAccordionOpen] = useState(false);
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [showTpEditor, setShowTpEditor] = useState(false);
   const profile = getFaseProfile(parameters.fase);
   const totalSoal = getTotalQuestions(parameters.bentukSoalCounts);
   const diffAlloc = calculateDifficultyAllocation(totalSoal, parameters.komposisiKesulitan);
 
   const handleFaseChange = (newFase: FaseCode) => {
     const nextProfile = getFaseProfile(newFase);
-    const defaultQuick = QUICK_TOPICS[newFase]?.[0];
+    const nextKelas = nextProfile.kelasOptions[0];
+    const availableTopics = getTopicsForFaseAndKelas(newFase, nextKelas);
+    const defaultTopic = availableTopics[0];
     onChangeParameters({
       ...parameters,
       fase: newFase,
       jenjang: nextProfile.jenjang,
-      kelas: nextProfile.kelasOptions[0],
+      kelas: nextKelas,
       komposisiKesulitan: { ...nextProfile.defaultComposition },
-      ...(defaultQuick
+      ...(defaultTopic
         ? {
-            topikMateri: defaultQuick.topik,
-            capaianPembelajaranOpsional: defaultQuick.cp,
-            elemen: defaultQuick.elemen,
+            topikMateri: defaultTopic.judulTopik,
+            capaianPembelajaranOpsional: defaultTopic.rumusanTP,
+            elemen: defaultTopic.elemen,
+            nilaiModerasiFokus: defaultTopic.rekomendasiModerasi || parameters.nilaiModerasiFokus,
           }
         : {}),
     });
+    setIsCustomMode(false);
+    setShowTpEditor(false);
     setValidationError(null);
+  };
+
+  const handleKelasChange = (newKelas: string) => {
+    const nextTopics = getTopicsForFaseAndKelas(parameters.fase, newKelas);
+    const currentMatches = nextTopics.find(
+      (t) => t.judulTopik === parameters.topikMateri || t.materiPokok === parameters.topikMateri
+    );
+    if (!isCustomMode && !currentMatches && nextTopics.length > 0) {
+      const firstT = nextTopics[0];
+      onChangeParameters({
+        ...parameters,
+        kelas: newKelas,
+        topikMateri: firstT.judulTopik,
+        capaianPembelajaranOpsional: firstT.rumusanTP,
+        elemen: firstT.elemen,
+        nilaiModerasiFokus: firstT.rekomendasiModerasi || parameters.nilaiModerasiFokus,
+      });
+    } else {
+      onChangeParameters({ ...parameters, kelas: newKelas });
+    }
   };
 
   const toggleElemen = (el: ElemenPAI) => {
@@ -301,7 +337,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             <select
               id="select-kelas"
               value={parameters.kelas}
-              onChange={(e) => onChangeParameters({ ...parameters, kelas: e.target.value })}
+              onChange={(e) => handleKelasChange(e.target.value)}
               className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-700"
             >
               {profile.kelasOptions.map((kl) => (
@@ -374,71 +410,284 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
 
       {/* 3. Topik Materi & CP */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label htmlFor="input-topik" className="block text-xs font-semibold text-slate-800">
-            03. Topik Materi & Capaian Pembelajaran (CP/TP)
-          </label>
-        </div>
+        {(() => {
+          const curriculumTopics = getTopicsForFaseAndKelas(parameters.fase, parameters.kelas);
+          const matchedTopic = curriculumTopics.find(
+            (t) =>
+              t.judulTopik === parameters.topikMateri ||
+              t.materiPokok === parameters.topikMateri ||
+              (parameters.topikMateri && parameters.topikMateri.includes(t.judulTopik))
+          );
+          const activeTopicId = isCustomMode
+            ? 'custom'
+            : matchedTopic
+            ? matchedTopic.id
+            : curriculumTopics[0]?.id || 'custom';
 
-        {/* Quick Topic Presets for active Fase */}
-        {QUICK_TOPICS[parameters.fase] && QUICK_TOPICS[parameters.fase].length > 0 && (
-          <div className="space-y-1">
-            <span className="text-[11px] text-slate-500 block">
-              Contoh Topik Cepat ({parameters.fase}):
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_TOPICS[parameters.fase].map((qt) => (
-                <button
-                  key={qt.label}
-                  type="button"
-                  onClick={() => {
-                    onChangeParameters({
-                      ...parameters,
-                      topikMateri: qt.topik,
-                      capaianPembelajaranOpsional: qt.cp,
-                      elemen: qt.elemen,
-                    });
-                    setValidationError(null);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors cursor-pointer"
-                >
-                  <BookOpen className="w-3 h-3 shrink-0" />
-                  <span className="truncate max-w-[240px]">{qt.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div>
-          <textarea
-            id="input-topik"
-            rows={2}
-            value={parameters.topikMateri}
-            onChange={(e) => {
-              onChangeParameters({ ...parameters, topikMateri: e.target.value });
-              if (validationError) setValidationError(null);
-            }}
-            placeholder="Contoh: Makna Q.S. Al-Hujurat: 6 tentang Tabayyun, Adab Bermedia Sosial, dan Pencegahan Bullying..."
-            className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-700"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="input-cp" className="block text-xs font-medium text-slate-700 mb-1">
-            Rumusan Capaian / Tujuan Pembelajaran (Opsional)
-          </label>
-          <textarea
-            id="input-cp"
-            rows={2}
-            value={parameters.capaianPembelajaranOpsional ?? ''}
-            onChange={(e) =>
-              onChangeParameters({ ...parameters, capaianPembelajaranOpsional: e.target.value })
+          const handleTopicSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+            const val = e.target.value;
+            if (val === 'custom') {
+              setIsCustomMode(true);
+              setShowTpEditor(true);
+              return;
             }
-            placeholder="Kosongkan jika ingin disusun otomatis sesuai CP Kurikulum Merdeka PAIBP..."
-            className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-700"
-          />
-        </div>
+            setIsCustomMode(false);
+            setShowTpEditor(false);
+            const chosen = curriculumTopics.find((t) => t.id === val);
+            if (chosen) {
+              onChangeParameters({
+                ...parameters,
+                topikMateri: chosen.judulTopik,
+                capaianPembelajaranOpsional: chosen.rumusanTP,
+                elemen: chosen.elemen,
+                nilaiModerasiFokus: chosen.rekomendasiModerasi || parameters.nilaiModerasiFokus,
+              });
+              if (validationError) setValidationError(null);
+            }
+          };
+
+          const handleSelectQuickBadge = (t: CurriculumTopic) => {
+            setIsCustomMode(false);
+            setShowTpEditor(false);
+            onChangeParameters({
+              ...parameters,
+              topikMateri: t.judulTopik,
+              capaianPembelajaranOpsional: t.rumusanTP,
+              elemen: t.elemen,
+              nilaiModerasiFokus: t.rekomendasiModerasi || parameters.nilaiModerasiFokus,
+            });
+            if (validationError) setValidationError(null);
+          };
+
+          return (
+            <>
+            <div className="flex items-center justify-between">
+              <div>
+                <label
+                  htmlFor="select-topik-materi"
+                  className="block text-xs font-semibold text-slate-800"
+                >
+                  03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)
+                </label>
+                <p className="text-[11px] text-emerald-800 font-medium">
+                  Basis Data Resmi Kurikulum Merdeka (Kepka BSKAP No. 020 Tahun 2026)
+                </p>
+              </div>
+              {matchedTopic && !isCustomMode && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full flex items-center gap-1">
+                  <Check className="w-3 h-3 text-emerald-700" />
+                  <span>Resmi CP 020/2026</span>
+                </span>
+              )}
+            </div>
+
+            {/* Cascading Dropdown: Pilih Topik Materi Resmi (CP 020/2026) */}
+            <div>
+              <label
+                htmlFor="select-topik-materi"
+                className="block text-xs font-medium text-slate-700 mb-1"
+              >
+                Pilih Topik Materi Resmi (CP 020/2026)
+              </label>
+              <select
+                id="select-topik-materi"
+                value={activeTopicId}
+                onChange={handleTopicSelectChange}
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-700 font-medium"
+              >
+                <optgroup
+                  label={`Topik Resmi CP 020/2026 (${parameters.fase} · ${parameters.kelas})`}
+                >
+                  {curriculumTopics.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      [{t.elemen.join(', ')}] {t.judulTopik}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Opsi Kustomisasi Mandiri">
+                  <option value="custom">➕ Ketik / Kustomisasi Topik &amp; TP Sendiri</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Quick Chips for Active Class Topics */}
+            {curriculumTopics.length > 0 && !isCustomMode && (
+              <div className="space-y-1">
+                <span className="text-[11px] text-slate-500 block">
+                  Topik Pilihan Cepat ({parameters.kelas}):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {curriculumTopics.slice(0, 4).map((t) => {
+                    const isCurrent = matchedTopic?.id === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectQuickBadge(t)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-md transition-colors cursor-pointer border ${
+                          isCurrent
+                            ? 'bg-emerald-800 text-white border-emerald-900 font-semibold'
+                            : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-emerald-200'
+                        }`}
+                      >
+                        <Bookmark className="w-3 h-3 shrink-0" />
+                        <span className="truncate max-w-[200px]">{t.judulTopik}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* View Card for Selected Official Topic */}
+            {!isCustomMode && matchedTopic ? (
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-200 pb-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-semibold text-slate-500">Materi Pokok:</span>
+                    <span className="font-bold text-slate-900">{matchedTopic.materiPokok}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {matchedTopic.elemen.map((el) => (
+                      <span
+                        key={el}
+                        className="text-[10px] font-medium px-2 py-0.5 bg-white border border-slate-200 text-slate-700 rounded-md"
+                      >
+                        {el}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-emerald-950 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-emerald-700" />
+                      <span>Rumusan Capaian / Tujuan Pembelajaran (TP) Resmi:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTpEditor((prev) => !prev)}
+                      className="text-emerald-800 hover:text-emerald-900 font-semibold text-[11px] inline-flex items-center gap-1 underline cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>{showTpEditor ? 'Tutup Editor TP' : 'Sesuaikan Redaksi TP'}</span>
+                    </button>
+                  </div>
+
+                  {!showTpEditor ? (
+                    <div className="p-2.5 bg-white border border-emerald-200/90 rounded-md text-slate-800 font-serif leading-relaxed text-xs">
+                      {parameters.capaianPembelajaranOpsional || matchedTopic.rumusanTP}
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 pt-1">
+                      <textarea
+                        rows={3}
+                        value={parameters.capaianPembelajaranOpsional ?? ''}
+                        onChange={(e) =>
+                          onChangeParameters({
+                            ...parameters,
+                            capaianPembelajaranOpsional: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-white border border-emerald-500 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-600 font-serif"
+                      />
+                      <div className="flex items-center justify-between text-[11px] text-slate-500">
+                        <span>Redaksi TP ini langsung dicetak ke Kolom 3 Matriks Kisi-Kisi.</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onChangeParameters({
+                              ...parameters,
+                              capaianPembelajaranOpsional: matchedTopic.rumusanTP,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 underline cursor-pointer"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Reset ke Teks Bawaan CP 020</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Custom Mode: User Types Custom Topic and Custom Learning Objectives */}
+            {isCustomMode && (
+              <div className="p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg space-y-3 text-xs">
+                <div className="flex items-center justify-between text-amber-950 font-semibold border-b border-amber-200 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Edit3 className="w-3.5 h-3.5 text-amber-800" />
+                    <span>Mode Kustom: Ketik Topik Materi &amp; TP Sendiri</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomMode(false);
+                      setShowTpEditor(false);
+                      const def = curriculumTopics[0];
+                      if (def) {
+                        onChangeParameters({
+                          ...parameters,
+                          topikMateri: def.judulTopik,
+                          capaianPembelajaranOpsional: def.rumusanTP,
+                          elemen: def.elemen,
+                          nilaiModerasiFokus:
+                            def.rekomendasiModerasi || parameters.nilaiModerasiFokus,
+                        });
+                      }
+                    }}
+                    className="text-[11px] text-emerald-900 hover:text-emerald-950 font-semibold underline cursor-pointer"
+                  >
+                    ↩️ Kembali ke Topik Resmi CP 020
+                  </button>
+                </div>
+
+                <div>
+                  <label htmlFor="input-topik-custom" className="block text-xs font-semibold text-slate-800 mb-1">
+                    Topik / Materi Pembelajaran Kustom *
+                  </label>
+                  <textarea
+                    id="input-topik-custom"
+                    rows={2}
+                    value={parameters.topikMateri}
+                    onChange={(e) => {
+                      onChangeParameters({ ...parameters, topikMateri: e.target.value });
+                      if (validationError) setValidationError(null);
+                    }}
+                    placeholder="Ketik topik materi pembelajaran secara spesifik..."
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-700"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="input-cp-custom" className="block text-xs font-medium text-slate-700 mb-1">
+                    Rumusan Capaian / Tujuan Pembelajaran (TP) Kustom
+                  </label>
+                  <textarea
+                    id="input-cp-custom"
+                    rows={2}
+                    value={parameters.capaianPembelajaranOpsional ?? ''}
+                    onChange={(e) =>
+                      onChangeParameters({
+                        ...parameters,
+                        capaianPembelajaranOpsional: e.target.value,
+                      })
+                    }
+                    placeholder="Murid mampu menganalisis / memahami..."
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-700 font-serif"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Teks TP di atas akan langsung tercetak di Kolom 3 Matriks Kisi-Kisi dan dipertimbangkan penuh oleh AI generator.
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
         <div>
           <label htmlFor="select-moderasi" className="block text-xs font-medium text-slate-700 mb-1">
