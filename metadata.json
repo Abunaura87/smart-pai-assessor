@@ -1,0 +1,6 @@
+{
+  "name": "Smart PAI Assessor — Asesmen PAIBP Kurikulum Merdeka",
+  "description": "Asisten AI pakar asesmen dan evaluasi pembelajaran Pendidikan Agama Islam dan Budi Pekerti (PAIBP) untuk jenjang SD/MI, SMP/MTs, dan SMA/SMK/MA berbasis Kurikulum Merdeka, Taksonomi Bloom, AKM, dan Moderasi Beragama.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
