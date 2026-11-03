@@ -7,7 +7,7 @@ import {
   QuestionItem,
 } from '../types/assessment';
 import { calculateDifficultyAllocation, getFaseProfile } from '../utils/paiRules';
-import { selectDistinctNarrativeSeed } from './narrativeBank';
+import { selectDistinctNarrativeSeed, selectQuestionSeed } from './narrativeBank';
 
 const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
   {
@@ -240,7 +240,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
           'Menjelang pemilihan ketua panitia peringatan hari besar Islam di sekolah, kolom komentar media sosial OSIS dipenuhi perdebatan tajam antarpendukung kandidat. Sebagian komentar mulai menyinggung latar belakang organisasi keagamaan keluarga masing-masing kandidat.',
         instruksiKhusus: 'Pilihlah dua jawaban yang benar!',
         pertanyaan:
-          'Manakah dua langkah yang paling tepat dilakukan oleh pengurus OSIS dan siswa untuk menjaga kemaslahatan serta menerapkan nilai moderasi beragama pada situasi tersebut?',
+          'Manakah dua langkah yang paling tepat dilakukan oleh pengurus OSIS dan murid untuk menjaga kemaslahatan serta menerapkan nilai moderasi beragama pada situasi tersebut?',
         opsi: [
           {
             label: 'A',
@@ -252,7 +252,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
           },
           {
             label: 'C',
-            teks: 'Mengadakan forum musyawarah bersama (syura) antarkandidat untuk memberi teladan persaudaraan di depan siswa',
+            teks: 'Mengadakan forum musyawarah bersama (syura) antarkandidat untuk memberi teladan persaudaraan di depan murid',
           },
           {
             label: 'D',
@@ -277,7 +277,7 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
           'Islam mengatur etika pergaulan agar tercipta lingkungan yang aman, damai, dan saling menghormati sebagaimana termaktub dalam Q.S. Al-Hujurat/49: 11–12.',
         instruksiKhusus: 'Tentukan Benar atau Salah untuk setiap pernyataan berikut!',
         pertanyaan:
-          'Analisis setiap pernyataan perilaku siswa berikut berdasarkan kandungan Q.S. Al-Hujurat/49: 11–12:',
+          'Analisis setiap pernyataan perilaku murid berikut berdasarkan kandungan Q.S. Al-Hujurat/49: 11–12:',
         pernyataanBenarSalah: [
           {
             pernyataan:
@@ -308,13 +308,13 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         bentukSoal: 'Uraian',
         levelCode: 'L3',
         taksonomiBloom: 'C5 (Mengevaluasi)',
-        indikatorRef: 'Merumuskan tiga langkah solutif berbasis nilai tasamuh dan ukhuwah terhadap kasus pengucilan siswa baru.',
+        indikatorRef: 'Merumuskan tiga langkah solutif berbasis nilai tasamuh dan ukhuwah terhadap kasus pengucilan murid baru.',
         stimulus:
-          'Di kelas 8 terdapat seorang siswa pindahan dari luar pulau yang memiliki logat bicara berbeda. Beberapa siswa sering menirukan cara bicaranya sambil tertawa sehingga siswa baru tersebut enggan berbicara saat diskusi kelompok dan memilih makan siang sendirian.',
+          'Di kelas 8 terdapat seorang murid pindahan dari luar pulau yang memiliki logat bicara berbeda. Beberapa murid sering menirukan cara bicaranya sambil tertawa sehingga murid baru tersebut enggan berbicara saat diskusi kelompok dan memilih makan siang sendirian.',
         pertanyaan:
           'Sebagai pengurus kelas yang memahami ajaran akhlak Islam dan moderasi beragama:\na) Jelaskan mengapa perilaku menertawakan logat daerah teman bertentangan dengan Q.S. Al-Hujurat/49: 11 dan 13!\nb) Rumuskan 3 (tiga) langkah konkret yang dapat kamu lakukan bersama teman sekelas untuk membangun kembali suasana inklusif dan persaudaraan di kelas tersebut!',
         kunciJawaban:
-          'a) Bertentangan dengan Q.S. Al-Hujurat/49: 11 karena termasuk istihza\' (mengolok-olok kaum lain yang boleh jadi lebih baik di sisi Allah) dan bertentangan dengan Q.S. Al-Hujurat/49: 13 karena keberagaman suku/bahasa diciptakan Allah untuk saling mengenal (lita\'arafu), bukan saling merendahkan.\nb) Tiga langkah konkret: (1) Mengajak teman yang menertawakan untuk berdialog secara santun dan meminta maaf (ishlah); (2) Melibatkan siswa baru secara aktif dalam kelompok belajar dan mengenalkan keunikan budaya daerah masing-masing; (3) Menyepakati komitmen kelas ramah keberagaman (anti-bullying) bersama wali kelas.',
+          'a) Bertentangan dengan Q.S. Al-Hujurat/49: 11 karena termasuk istihza\' (mengolok-olok kaum lain yang boleh jadi lebih baik di sisi Allah) dan bertentangan dengan Q.S. Al-Hujurat/49: 13 karena keberagaman suku/bahasa diciptakan Allah untuk saling mengenal (lita\'arafu), bukan saling merendahkan.\nb) Tiga langkah konkret: (1) Mengajak teman yang menertawakan untuk berdialog secara santun dan meminta maaf (ishlah); (2) Melibatkan murid baru secara aktif dalam kelompok belajar dan mengenalkan keunikan budaya daerah masing-masing; (3) Menyepakati komitmen kelas ramah keberagaman (anti-bullying) bersama wali kelas.',
         pembahasanSingkat:
           'Jawaban mengintegrasikan pemahaman dalil naqli (Q.S. Al-Hujurat: 11 & 13 tentang larangan olok-olok dan prinsip ta\'aruf dalam keberagaman) dengan tindakan nyata moderasi beragama (tasamuh, ishlah, dan muwathanah).',
         dalilAtauKonsep: 'Q.S. Al-Hujurat/49: 11 & 13 — Prinsip Lita\'arafu & Ukhuwah Wathaniyah',
@@ -427,9 +427,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         no: 2,
         elemen: 'Fikih',
         capaianTujuanPembelajaran:
-          'Menganalisis praktik transaksi ekonomi digital kontemporer berdasarkan prinsip syariah (bebas gharar, maisir, dan riba).',
+          'Menganalisis prinsip dan praktik asuransi syariah (takaful) serta perbankan syariah berbasis tolong-menolong (ta\'awun) dan bebas riba.',
         indikatorSoalABCD:
-          'Disajikan studi kasus skema pinjaman daring (paylater/pinjol) berbunga majemuk yang menjerat pelajar (Condition), murid (Audience) dapat mengevaluasi letak ketidakabsahan akad tersebut berdasarkan prinsip muamalah Islam dengan akurat (Behavior & Degree).',
+          'Disajikan studi kasus prinsip penghimpunan dana asuransi syariah (takaful) berbasis tolong-menolong (Condition), murid (Audience) dapat membedakan akad tabarru\' dari transaksi yang mengandung maisir dan riba secara tepat (Behavior & Degree).',
         levelKognitif: 'L3 (C5 - Mengevaluasi / HOTS)',
         levelCode: 'L3',
         bentukSoal: 'Pilihan Ganda',
@@ -463,9 +463,9 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         no: 5,
         elemen: 'Fikih',
         capaianTujuanPembelajaran:
-          'Merancang solusi keuangan mikro syariah bagi koperasi siswa untuk mencegah praktik ribawi dan menjaga hifzh al-mal.',
+          'Merancang solusi keuangan mikro syariah bagi koperasi murid untuk mencegah praktik ribawi dan menjaga hifzh al-mal.',
         indikatorSoalABCD:
-          'Disajikan permasalahan koperasi siswa yang ingin membantu anggota membeli perlengkapan praktik sekolah tanpa skema bunga (Condition), murid (Audience) dapat merancang skema akad syariah alternatif (murabahah atau qardhul hasan) beserta mekanisme keadilannya secara komprehensif (Behavior & Degree).',
+          'Disajikan permasalahan koperasi murid yang ingin membantu anggota membeli perlengkapan praktik sekolah tanpa skema bunga (Condition), murid (Audience) dapat merancang skema akad syariah alternatif (murabahah atau qardhul hasan) beserta mekanisme keadilannya secara komprehensif (Behavior & Degree).',
         levelKognitif: 'L3 (C6 - Mencipta / HOTS)',
         levelCode: 'L3',
         bentukSoal: 'Uraian',
@@ -520,38 +520,38 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         bentukSoal: 'Pilihan Ganda',
         levelCode: 'L3',
         taksonomiBloom: 'C5 (Mengevaluasi)',
-        indikatorRef: 'Mengevaluasi ketidakabsahan skema pinjaman daring berbunga majemuk ditinjau dari fikih muamalah.',
+        indikatorRef: 'Mengevaluasi prinsip tolong-menolong akad tabarru\' pada asuransi syariah (takaful) ditinjau dari fikih muamalah.',
         stimulus:
-          'Seorang siswa SMA tergiur membeli tiket konser menggunakan layanan pinjaman daring ilegal. Pinjaman awal sebesar Rp500.000,00 disyaratkan kembali Rp650.000,00 dalam waktu 14 hari, dan setiap keterlambatan satu hari dikenakan denda tambahan berlipat ganda hingga melampaui pokok utang.',
+          'Dalam asuransi syariah (takaful), para peserta menyetorkan sejumlah premi yang diniatkan sebagai dana hibah kebajikan untuk saling tolong-menolong (ta\'awun) apabila ada anggota yang tertimpa musibah sakit atau kecelakaan.',
         pertanyaan:
-          'Ditinjau dari kaidah fikih muamalah dan perlindungan harta (hifzh al-mal), transaksi tersebut dilarang dalam syariat Islam karena mengandung unsur ....',
+          'Prinsip utama yang membedakan asuransi syariah dari praktik asuransi konvensional yang dilarang adalah penggunaan akad ....',
         opsi: [
           {
             label: 'A',
-            teks: 'Mudharabah mutlaqah karena pemilik modal tidak ikut campur dalam pengelolaan dana konsumsi peminjam',
+            teks: 'Tabarru\' (kebajikan saling tolong-menolong) yang terbebas dari unsur maisir, gharar, dan riba',
           },
           {
             label: 'B',
-            teks: 'Khiyar majelis karena kedua belah pihak menyepakati syarat perjanjian melalui aplikasi secara sukarela',
+            teks: 'Mudharabah mutlaqah di mana seluruh risiko kerugian hanya ditanggung oleh peserta secara sepihak',
           },
           {
             label: 'C',
-            teks: 'Riba qardh dan riba jahiliyah yang mensyaratkan tambahan pokok pinjaman serta denda berlipat atas keterlambatan',
+            teks: 'Ijarah muntahiya bittamlik yang mewajibkan penyerahan seluruh aset nasabah kepada pihak pengelola',
           },
           {
             label: 'D',
-            teks: 'Syirkah in\'an karena pembagian keuntungan ditetapkan di awal berdasarkan persentase modal yang dipinjamkan',
+            teks: 'Qardhul hasan dengan kewajiban memberikan tambahan bunga bulanan kepada perusahaan asuransi',
           },
           {
             label: 'E',
-            teks: 'Wakalah bil ujrah karena penyelenggara aplikasi berhak menagih biaya sewa perangkat lunak tanpa batas',
+            teks: 'Riba nasi\'ah yang memberikan jaminan keuntungan pasti berlipat ganda pada setiap akhir tahun',
           },
         ],
-        kunciJawaban: 'C',
+        kunciJawaban: 'A',
         pembahasanSingkat:
-          'Tambahan yang disyaratkan di awal atas pokok utang pinjaman termasuk riba qardh, sedangkan denda berlipat ganda akibat penundaan pembayaran saat jatuh tempo merupakan praktik riba jahiliyah (adh\'afan mudha\'afah) yang menzalimi pihak peminjam.',
-        dalilAtauKonsep: 'Q.S. Al-Baqarah/2: 275–279 & Q.S. Ali \'Imran/3: 130 (Larangan Riba)',
-        nilaiModerasi: 'I\'tidal (Keadilan Sosial-Ekonomi & Menolak Kezaliman)',
+          'Asuransi syariah (takaful) berlandaskan akad tabarru\' (hibah/tolong-menolong) dan tijarah (investasi syariah), sehingga terbebas dari praktik perjudian (maisir), ketidakjelasan (gharar), dan bunga (riba) yang terdapat dalam asuransi konvensional.',
+        dalilAtauKonsep: 'Q.S. Al-Ma\'idah/5: 2 — Bertolong-menolonglah Kamu dalam Kebaikan dan Takwa',
+        nilaiModerasi: 'I\'tidal (Keadilan Sosial-Ekonomi & Saling Menolong)',
       },
       {
         nomor: 3,
@@ -641,13 +641,13 @@ const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
         bentukSoal: 'Uraian',
         levelCode: 'L3',
         taksonomiBloom: 'C6 (Mencipta)',
-        indikatorRef: 'Merancang skema pembiayaan koperasi siswa berbasis akad syariah (murabahah/qardhul hasan).',
+        indikatorRef: 'Merancang skema pembiayaan koperasi murid berbasis akad syariah (murabahah/qardhul hasan).',
         stimulus:
-          'Koperasi Siswa di sebuah SMK memiliki dana kas sebesar Rp15.000.000,00. Banyak siswa membutuhkan bantuan pengadaan alat praktik kejuruan seharga Rp300.000,00 per paket yang hanya mampu mereka bayar secara mencicil selama 3 bulan dari uang saku. Sebagian pengurus mengusulkan meminjamkan uang tunai Rp300.000,00 dengan syarat siswa mengembalikan Rp345.000,00 (bunga 5% per bulan).',
+          'Koperasi Murid di sebuah sekolah memiliki dana kas sebesar Rp15.000.000,00. Banyak murid membutuhkan bantuan pengadaan alat praktik kejuruan seharga Rp300.000,00 per paket yang hanya mampu mereka bayar secara mencicil selama 3 bulan dari uang saku. Sebagian pengurus mengusulkan meminjamkan uang tunai Rp300.000,00 dengan syarat murid mengembalikan Rp345.000,00 (bunga 5% per bulan).',
         pertanyaan:
-          'Berdasarkan kasus di atas:\na) Mengapa usulan pinjaman uang tunai dengan tambahan bunga 5% per bulan tersebut tidak dibenarkan dalam fikih muamalah?\nb) Rancanglah 1 (satu) skema alternatif berbasis akad syariah (pilih antara akad Murabahah/jual beli cicilan atau Qardhul Hasan/pinjaman kebajikan) yang dapat diterapkan koperasi siswa beserta langkah operasionalnya secara adil!',
+          'Berdasarkan kasus di atas:\na) Mengapa usulan pinjaman uang tunai dengan tambahan bunga 5% per bulan tersebut tidak dibenarkan dalam fikih muamalah?\nb) Rancanglah 1 (satu) skema alternatif berbasis akad syariah (pilih antara akad Murabahah/jual beli cicilan atau Qardhul Hasan/pinjaman kebajikan) yang dapat diterapkan koperasi murid beserta langkah operasionalnya secara adil!',
         kunciJawaban:
-          'a) Usulan tersebut tidak dibenarkan karena termasuk riba qardh, yaitu meminjamkan uang tunai dengan syarat pengembalian berlebih yang ditetapkan di muka atas pokok pinjaman.\nb) Rancangan Skema Alternatif:\n- Alternatif 1 (Akad Murabahah/Jual Beli Tangguh): Koperasi membeli terlebih dahulu paket alat praktik dari pemasok (misal Rp270.000,00 secara grosir atau Rp300.000,00), lalu menjual barang tersebut kepada siswa dengan menyebutkan harga pokok dan margin keuntungan yang disepakati di awal secara tetap (misal harga jual Rp315.000,00 dicicil Rp105.000,00 × 3 bulan tanpa denda bunga keterlambatan).\n- Alternatif 2 (Akad Qardhul Hasan): Koperasi memberikan pinjaman kebajikan Rp300.000,00 dan siswa mengembalikan tepat sebesar pokok Rp300.000,00 (dicicil Rp100.000,00 × 3 bulan) demi ta\'awun (tolong-menolong).',
+          'a) Usulan tersebut tidak dibenarkan karena termasuk riba qardh, yaitu meminjamkan uang tunai dengan syarat pengembalian berlebih yang ditetapkan di muka atas pokok pinjaman.\nb) Rancangan Skema Alternatif:\n- Alternatif 1 (Akad Murabahah/Jual Beli Tangguh): Koperasi membeli terlebih dahulu paket alat praktik dari pemasok (misal Rp270.000,00 secara grosir atau Rp300.000,00), lalu menjual barang tersebut kepada murid dengan menyebutkan harga pokok dan margin keuntungan yang disepakati di awal secara tetap (misal harga jual Rp315.000,00 dicicil Rp105.000,00 × 3 bulan tanpa denda bunga keterlambatan).\n- Alternatif 2 (Akad Qardhul Hasan): Koperasi memberikan pinjaman kebajikan Rp300.000,00 dan murid mengembalikan tepat sebesar pokok Rp300.000,00 (dicicil Rp100.000,00 × 3 bulan) demi ta\'awun (tolong-menolong).',
         pembahasanSingkat:
           'Soal C6 (Mencipta) ini menguji kemampuan murid mengevaluasi praktik ribawi sekaligus menyusun desain operasional akad syariah yang sah, transparan, dan memenuhi maqashid syariah (hifzh al-mal & ta\'awun).',
         dalilAtauKonsep: 'Q.S. Al-Baqarah/2: 275 ("Allah menghalalkan jual beli dan mengharamkan riba") & Akad Murabahah/Qardh',
@@ -1272,7 +1272,7 @@ export function buildCustomFallbackPackage(
     for (let i = 0; i < group.jumlah; i++) {
       const no = currentNo++;
       const preferredElemen = elemenList[(no - 1) % elemenList.length];
-      const seed = selectDistinctNarrativeSeed(params.fase, preferredElemen, no - 1, usedStimuli);
+      const seed = selectQuestionSeed(params.fase, group.bentuk, preferredElemen, no - 1, usedStimuli);
       const elemen = preferredElemen;
       const levelCode = diffAlloc.sequence[no - 1] ?? 'L2';
       const bloomMap: Record<string, string> = {

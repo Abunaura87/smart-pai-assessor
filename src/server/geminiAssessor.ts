@@ -354,7 +354,7 @@ export async function generateAssessmentWithGemini(
 
   const prompt = `Susunlah Paket Instrumen Asesmen PAIBP Lengkap (Blueprint-First) untuk parameter berikut:
 - Fase & Kelas: ${parameters.fase} — ${parameters.kelas} (${parameters.jenjang})
-- Karakteristik Bahasa & Psikologi Usia Murid: ${profile.cognitiveFocus}
+- Karakteristik Bahasa & Psikologi Usia Murid: ${profile.karakteristik}
 - Aturan Jumlah Opsi Pilihan Ganda: Wajib ${profile.optionCount} opsi (${profile.optionLabels.join(', ')})
 - Elemen PAIBP: ${parameters.elemen.join(', ')}
 - Jenis Asesmen: ${parameters.jenisUjian}
@@ -364,9 +364,9 @@ export async function generateAssessmentWithGemini(
 - Rincian Bentuk & Jumlah Soal (Total ${totalQuestions} butir):
 ${activeForms.map((f) => `  * ${f.bentuk}: ${f.jumlah} butir`).join('\n')}
 - Alokasi Level Kognitif:
-  * L1 (Mudah): ${diffAlloc.l1Count} soal
-  * L2 (Sedang): ${diffAlloc.l2Count} soal
-  * L3 (HOTS): ${diffAlloc.l3Count} soal
+  * L1 (Mudah): ${diffAlloc.countL1} soal
+  * L2 (Sedang): ${diffAlloc.countL2} soal
+  * L3 (HOTS): ${diffAlloc.countL3} soal
   * Urutan Level per Nomor: ${diffAlloc.sequence.map((lvl, idx) => `No.${idx + 1}=${lvl}`).join(', ')}
 
 INSTRUKSI WAJIB VARIASI STIMULUS & FORMAT SOAL:

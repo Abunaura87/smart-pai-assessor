@@ -339,4 +339,66 @@ test('Stimulus parser converts pipe tables into HTML tables, detects vocalized A
   assert.ok(plain.includes('C. Uraian'), 'Plain text must have C. Uraian section');
 });
 
+test('Strict grade-level isolation guarantees zero cross-phase contamination in 30 questions (Fase C SD/MI)', () => {
+  // Generate 30 questions for Fase C (Kelas 6 SD/MI): 25 PG + 5 Uraian
+  const pkgFaseC = buildCustomFallbackPackage({
+    fase: 'Fase C',
+    kelas: 'Kelas 6 SD/MI',
+    jenjang: 'SD/MI',
+    elemen: [
+      'Al-Qur\'an dan Hadis',
+      'Akidah',
+      'Akhlak',
+      'Fikih',
+      'Sejarah Peradaban Islam (SPI)',
+    ],
+    jenisUjian: 'Sumatif Akhir Semester (SAS)',
+    topikMateri: 'Pesan Pokok Q.S. Al-Hujurat: 13, Asmaul Husna Al-Qayyum, Takdir Muallaq, Zakat Fitrah, dan Musyawarah Khulafaurrasyidin',
+    nilaiModerasiFokus: 'Tasamuh (Toleransi & Menghargai Perbedaan / Al-Samhah)',
+    bentukSoalCounts: [
+      { bentuk: 'Pilihan Ganda', jumlah: 25 },
+      { bentuk: 'Uraian', jumlah: 5 },
+    ],
+    komposisiKesulitan: { mudahL1: 30, sedangL2: 50, hotsL3: 20 },
+  });
+
+  assert.equal(pkgFaseC.butirSoal.length, 30, 'Must generate exactly 30 questions');
+
+  // Verify that not a single question contains SMA or Grade 1 SD leaked content
+  for (const soal of pkgFaseC.butirSoal) {
+    const fullText = `${soal.stimulus} ${soal.pertanyaan} ${soal.kunciJawaban || ''} ${JSON.stringify(soal.opsi || [])}`;
+
+    // FORBIDDEN SMA / SMK items in Fase C
+    assert.equal(fullText.includes('pinjaman daring'), false, 'Fase C must NEVER contain pinjaman daring');
+    assert.equal(fullText.includes('pinjol'), false, 'Fase C must NEVER contain pinjol');
+    assert.equal(fullText.includes('tiket konser'), false, 'Fase C must NEVER contain tiket konser');
+    assert.equal(fullText.includes('mystery box'), false, 'Fase C must NEVER contain mystery box');
+    assert.equal(fullText.includes('dropship'), false, 'Fase C must NEVER contain dropship');
+    assert.equal(fullText.includes('hifzh al-\'aql'), false, 'Fase C must NEVER contain hifzh al-\'aql');
+    assert.equal(fullText.includes('syu\'abul iman'), false, 'Fase C must NEVER contain syu\'abul iman');
+
+    // FORBIDDEN SMP items in Fase C
+    assert.equal(fullText.includes('tim robotik MTs'), false, 'Fase C must NEVER contain tim robotik MTs');
+    assert.equal(fullText.includes('Sunan Kudus'), false, 'Fase C must NEVER contain Sunan Kudus');
+
+    // FORBIDDEN Grade 1 SD (Fase A) items in Fase C
+    assert.equal(fullText.includes('kucing kecil sedang kelaparan'), false, 'Fase C must NEVER contain Fase A kucing lapar');
+    assert.equal(fullText.includes('menumpahkan air minum di meja'), false, 'Fase C must NEVER contain Fase A tumpah air minum');
+    assert.equal(fullText.includes('pot bunga'), false, 'Fase C must NEVER contain pot bunga');
+    assert.equal(fullText.includes('kaki Budi kotor setelah bermain bola'), false, 'Fase C must NEVER contain Fase A Budi kotor');
+    assert.equal(fullText.includes('Siti duduk rapi di meja makan'), false, 'Fase C must NEVER contain Fase A Siti meja makan');
+  }
+
+  // Specifically check Uraian #4 and #5 in Fase C (which previously had the leaked questions)
+  const uraianItems = pkgFaseC.butirSoal.filter((s) => s.bentukSoal === 'Uraian');
+  assert.equal(uraianItems.length, 5, 'Must have exactly 5 Uraian questions');
+
+  for (let i = 0; i < uraianItems.length; i++) {
+    const uText = `${uraianItems[i].stimulus} ${uraianItems[i].pertanyaan}`;
+    assert.equal(uText.includes('tiket konser'), false, `Uraian #${i + 1} must not contain tiket konser`);
+    assert.equal(uText.includes('pinjaman daring'), false, `Uraian #${i + 1} must not contain pinjaman daring`);
+    assert.equal(uText.includes('menumpahkan air minum'), false, `Uraian #${i + 1} must not contain menumpahkan air minum`);
+  }
+});
+
 
