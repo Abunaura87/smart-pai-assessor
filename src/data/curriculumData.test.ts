@@ -3,18 +3,23 @@ import assert from 'node:assert/strict';
 import {
   CURRICULUM_DATABASE_CP020,
   getTopicsForFaseAndKelas,
+  isPaketGabunganTopic,
 } from './curriculumData';
+import { buildCustomFallbackPackage } from './presetPackages';
 import { FaseCode } from '../types/assessment';
 
-test('CURRICULUM_DATABASE_CP020 has valid structured entries across all phases A through F', () => {
-  assert.ok(CURRICULUM_DATABASE_CP020.length >= 25, 'Database should contain at least 25 official curriculum topics');
+test('CURRICULUM_DATABASE_CP020 has 120+ official entries across all 12 grades and 2 semesters', () => {
+  assert.ok(
+    CURRICULUM_DATABASE_CP020.length >= 120,
+    `Database should contain at least 120 official curriculum topics (found ${CURRICULUM_DATABASE_CP020.length})`
+  );
 
   const phases: FaseCode[] = ['Fase A', 'Fase B', 'Fase C', 'Fase D', 'Fase E', 'Fase F'];
   for (const f of phases) {
     const topicsInFase = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === f);
     assert.ok(
-      topicsInFase.length >= 2,
-      `Fase ${f} must have at least 2 official curriculum topics (found ${topicsInFase.length})`
+      topicsInFase.length >= 14,
+      `Fase ${f} must have at least 14 official curriculum topics (found ${topicsInFase.length})`
     );
   }
 
@@ -31,82 +36,132 @@ test('CURRICULUM_DATABASE_CP020 has valid structured entries across all phases A
   }
 });
 
+test('Every grade (Kelas 1 to Kelas 12) has at least 6-7 topics per semester including Paket SAS/SAT and 5 Bab PAI', () => {
+  const gradeMatrix: { fase: FaseCode; kelas: string }[] = [
+    { fase: 'Fase A', kelas: 'Kelas 1 SD/MI' },
+    { fase: 'Fase A', kelas: 'Kelas 2 SD/MI' },
+    { fase: 'Fase B', kelas: 'Kelas 3 SD/MI' },
+    { fase: 'Fase B', kelas: 'Kelas 4 SD/MI' },
+    { fase: 'Fase C', kelas: 'Kelas 5 SD/MI' },
+    { fase: 'Fase C', kelas: 'Kelas 6 SD/MI' },
+    { fase: 'Fase D', kelas: 'Kelas 7 SMP/MTs' },
+    { fase: 'Fase D', kelas: 'Kelas 8 SMP/MTs' },
+    { fase: 'Fase D', kelas: 'Kelas 9 SMP/MTs' },
+    { fase: 'Fase E', kelas: 'Kelas 10 SMA/MA' },
+    { fase: 'Fase F', kelas: 'Kelas 11 SMA/MA' },
+    { fase: 'Fase F', kelas: 'Kelas 12 SMA/MA' },
+  ];
+
+  for (const { fase, kelas } of gradeMatrix) {
+    const ganjilTopics = getTopicsForFaseAndKelas(fase, kelas, 'Ganjil');
+    const genapTopics = getTopicsForFaseAndKelas(fase, kelas, 'Genap');
+
+    assert.ok(
+      ganjilTopics.length >= 6,
+      `${kelas} Semester Ganjil must have at least 6 options (found ${ganjilTopics.length})`
+    );
+    assert.ok(
+      genapTopics.length >= 6,
+      `${kelas} Semester Genap must have at least 6 options (found ${genapTopics.length})`
+    );
+
+    // First option in each semester must be a combined [PAKET ...] with all 5 PAI elements
+    assert.ok(
+      isPaketGabunganTopic(ganjilTopics[0].judulTopik),
+      `${kelas} Ganjil first option must be a combined [PAKET SAS] option`
+    );
+    assert.equal(ganjilTopics[0].elemen.length, 5, `${kelas} Ganjil SAS package must cover all 5 PAI elements`);
+
+    assert.ok(
+      isPaketGabunganTopic(genapTopics[0].judulTopik),
+      `${kelas} Genap first option must be a combined [PAKET SAT/US] option`
+    );
+    assert.equal(genapTopics[0].elemen.length, 5, `${kelas} Genap SAT/US package must cover all 5 PAI elements`);
+  }
+});
+
 test('getTopicsForFaseAndKelas correctly filters topics by grade and phase', () => {
-  // Test Fase C - Kelas 5 SD/MI
   const kls5Topics = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI');
-  assert.ok(kls5Topics.length >= 4, 'Kelas 5 SD must have at least 4 topics');
+  assert.ok(kls5Topics.length >= 12, 'Kelas 5 SD must have at least 12 total topics across 2 semesters');
   assert.ok(kls5Topics.every((t) => t.fase === 'Fase C'));
   assert.ok(kls5Topics.some((t) => t.judulTopik.includes('Al-Ma\'un')));
   assert.ok(kls5Topics.some((t) => t.judulTopik.includes('Zakat Fitrah')));
 
-  // Test Fase C - Kelas 6 SD/MI
   const kls6Topics = getTopicsForFaseAndKelas('Fase C', 'Kelas 6 SD/MI');
-  assert.ok(kls6Topics.length >= 4, 'Kelas 6 SD must have at least 4 topics');
+  assert.ok(kls6Topics.length >= 12, 'Kelas 6 SD must have at least 12 total topics across 2 semesters');
   assert.ok(kls6Topics.every((t) => t.fase === 'Fase C'));
-  assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Halal') || t.judulTopik.includes('Haram')));
+  assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Halal dan Haram')));
   assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Khulafaurrasyidin')));
   assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Qada dan Qadar')));
-  assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Sampah Plastik') || t.judulTopik.includes('Lingkungan')));
+  assert.ok(kls6Topics.some((t) => t.judulTopik.includes('Sampah Plastik')));
+  assert.ok(kls6Topics.some((t) => t.judulTopik.includes('PAKET US')));
 
-  // Test Fase D - SMP
   const kls7Topics = getTopicsForFaseAndKelas('Fase D', 'Kelas 7 SMP/MTs');
   assert.ok(kls7Topics.some((t) => t.judulTopik.includes('Tabayyun') || t.judulTopik.includes('Perundungan')));
   assert.ok(kls7Topics.some((t) => t.judulTopik.includes('Malaikat')));
 
-  // Test Fase F - SMA
   const kls11Topics = getTopicsForFaseAndKelas('Fase F', 'Kelas 11 SMA/MA');
-  assert.ok(kls11Topics.some((t) => t.judulTopik.includes('Maqashid Syariah')));
+  assert.ok(kls11Topics.some((t) => t.judulTopik.includes('Khamr') || t.judulTopik.includes('Narkoba')));
   assert.ok(kls11Topics.some((t) => t.judulTopik.includes('Munakahat') || t.judulTopik.includes('Pernikahan')));
 });
 
 test('Required CP 020/2026 flagship topics exist in curriculum database', () => {
-  // Check Fase A: Huruf Hijaiah, Surah Pendek, Bersuci, Adam/Nuh
   const faseATopics = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === 'Fase A');
   assert.ok(faseATopics.some((t) => t.judulTopik.includes('Hijaiah')));
   assert.ok(faseATopics.some((t) => t.judulTopik.includes('Bersuci') || t.judulTopik.includes('Wudu')));
   assert.ok(faseATopics.some((t) => t.judulTopik.includes('Adam')));
 
-  // Check Fase B: Al-Alaq, Balig, Ulul Azmi, Salat Jumat
   const faseBTopics = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === 'Fase B');
   assert.ok(faseBTopics.some((t) => t.judulTopik.includes('Alaq')));
   assert.ok(faseBTopics.some((t) => t.judulTopik.includes('Balig')));
   assert.ok(faseBTopics.some((t) => t.judulTopik.includes('Ulul Azmi')));
 
-  // Check Fase C: Zakat Fitrah, Halal-Haram, Fathu Makkah, Lingkungan
   const faseCTopics = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === 'Fase C');
   assert.ok(faseCTopics.some((t) => t.judulTopik.includes('Zakat Fitrah')));
   assert.ok(faseCTopics.some((t) => t.judulTopik.includes('Fathu Makkah')));
   assert.ok(faseCTopics.some((t) => t.judulTopik.includes('Lingkungan')));
 
-  // Check Fase D: Tabayyun, Abbasiyah, Wali Songo
   const faseDTopics = CURRICULUM_DATABASE_CP020.filter((t) => t.fase === 'Fase D');
   assert.ok(faseDTopics.some((t) => t.judulTopik.includes('Tabayyun')));
   assert.ok(faseDTopics.some((t) => t.judulTopik.includes('Abbasiyah')));
-  assert.ok(faseDTopics.some((t) => t.judulTopik.includes('Wali Songo')));
+  assert.ok(faseDTopics.some((t) => t.judulTopik.includes('Tradisi Islam di Nusantara')));
 
-  // Check Fase E & F: Syu'abul Iman, Maqashid Syariah, Muamalah Kontemporer, Mawaris
   const highSchoolTopics = CURRICULUM_DATABASE_CP020.filter(
     (t) => t.fase === 'Fase E' || t.fase === 'Fase F'
   );
   assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Syu\'abul Iman')));
   assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Maqashid Syariah')));
-  assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Muamalah')));
-  assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Waris') || t.judulTopik.includes('Mawaris')));
+  assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Koperasi Syariah') || t.judulTopik.includes('Ekonomi Syariah')));
+  assert.ok(highSchoolTopics.some((t) => t.judulTopik.includes('Kewarisan') || t.judulTopik.includes('Mawaris')));
 });
 
-test('getTopicsForFaseAndKelas filters strictly by Semester Ganjil vs Genap', () => {
+test('getTopicsForFaseAndKelas filters strictly by Semester Ganjil vs Genap and Paket SAS distributes 5 elements', () => {
   const kls5Ganjil = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Ganjil');
   const kls5Genap = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Genap');
   const kls5Semua = getTopicsForFaseAndKelas('Fase C', 'Kelas 5 SD/MI', 'Semua');
 
-  assert.ok(kls5Ganjil.length >= 2, 'Kelas 5 Ganjil must have at least 2 topics');
-  assert.ok(kls5Genap.length >= 2, 'Kelas 5 Genap must have at least 2 topics');
+  assert.equal(kls5Ganjil.length, 7, 'Kelas 5 Ganjil must have 7 options (Paket SAS + Paket ATS + 5 Bab)');
+  assert.equal(kls5Genap.length, 7, 'Kelas 5 Genap must have 7 options (Paket SAT + Paket ATS + 5 Bab)');
   assert.ok(kls5Ganjil.every((t) => t.semester === 'Ganjil'));
   assert.ok(kls5Genap.every((t) => t.semester === 'Genap'));
   assert.equal(kls5Semua.length, kls5Ganjil.length + kls5Genap.length);
 
-  // Verify Kelas 5 Ganjil contains Al-Ma'un & Zakat Fitrah, while Genap contains Hari Akhir & Haji/Kurban
-  assert.ok(kls5Ganjil.some((t) => t.judulTopik.includes('Al-Ma\'un')));
-  assert.ok(kls5Genap.some((t) => t.judulTopik.includes('Hari Akhir')));
-});
+  // Verify that selecting [PAKET SAS GANJIL KELAS 5] distributes across all 5 PAI elements
+  const paketSAS = kls5Ganjil[0];
+  const generatedPkg = buildCustomFallbackPackage({
+    fase: 'Fase C',
+    kelas: 'Kelas 5 SD/MI',
+    semester: 'Ganjil',
+    jenjang: 'SD/MI',
+    elemen: paketSAS.elemen,
+    jenisUjian: 'Sumatif Akhir Semester (SAS)',
+    topikMateri: paketSAS.judulTopik,
+    capaianPembelajaranOpsional: paketSAS.rumusanTP,
+    nilaiModerasiFokus: 'Ishlah (Perdamaian & Anti-Kekerasan / Anti-Perundungan)',
+    bentukSoalCounts: [{ bentuk: 'Pilihan Ganda', jumlah: 5 }],
+    komposisiKesulitan: { mudahL1: 30, sedangL2: 50, hotsL3: 20 },
+  });
 
+  const uniqueElements = new Set(generatedPkg.butirSoal.map((q) => q.elemen));
+  assert.equal(uniqueElements.size, 5, '5 questions in Paket SAS must span all 5 PAI elements evenly');
+});

@@ -515,6 +515,34 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             ? matchedTopic.id
             : curriculumTopics[0]?.id || 'custom';
 
+          const applySelectedTopic = (chosen: CurriculumTopic) => {
+            setIsCustomMode(false);
+            setShowTpEditor(false);
+            const titleUpper = chosen.judulTopik.toUpperCase();
+            let nextJenisUjian = parameters.jenisUjian;
+            if (titleUpper.includes('[PAKET US') || titleUpper.includes('AKHIR JENJANG')) {
+              nextJenisUjian = 'Asesmen Akhir Jenjang (AAJ / Ujian Praktik)';
+            } else if (titleUpper.includes('[PAKET SAS') || titleUpper.includes('[PAKET SAT')) {
+              nextJenisUjian = 'Sumatif Akhir Semester (SAS)';
+            } else if (titleUpper.includes('[PAKET ATS')) {
+              nextJenisUjian = 'Asesmen Tengah Semester (ATS)';
+            }
+
+            onChangeParameters({
+              ...parameters,
+              jenisUjian: nextJenisUjian,
+              semester:
+                activeSemester === 'Semua'
+                  ? 'Semua'
+                  : (chosen.semester as SemesterOption) || activeSemester,
+              topikMateri: chosen.judulTopik,
+              capaianPembelajaranOpsional: chosen.rumusanTP,
+              elemen: chosen.elemen,
+              nilaiModerasiFokus: chosen.rekomendasiModerasi || parameters.nilaiModerasiFokus,
+            });
+            if (validationError) setValidationError(null);
+          };
+
           const handleTopicSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             const val = e.target.value;
             if (val === 'custom') {
@@ -522,40 +550,17 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               setShowTpEditor(true);
               return;
             }
-            setIsCustomMode(false);
-            setShowTpEditor(false);
             const chosen = curriculumTopics.find((t) => t.id === val);
             if (chosen) {
-              onChangeParameters({
-                ...parameters,
-                semester:
-                  activeSemester === 'Semua'
-                    ? 'Semua'
-                    : (chosen.semester as SemesterOption) || activeSemester,
-                topikMateri: chosen.judulTopik,
-                capaianPembelajaranOpsional: chosen.rumusanTP,
-                elemen: chosen.elemen,
-                nilaiModerasiFokus: chosen.rekomendasiModerasi || parameters.nilaiModerasiFokus,
-              });
-              if (validationError) setValidationError(null);
+              applySelectedTopic(chosen);
             }
           };
 
-          const handleSelectQuickBadge = (t: CurriculumTopic) => {
-            setIsCustomMode(false);
-            setShowTpEditor(false);
-            onChangeParameters({
-              ...parameters,
-              semester:
-                activeSemester === 'Semua'
-                  ? 'Semua'
-                  : (t.semester as SemesterOption) || activeSemester,
-              topikMateri: t.judulTopik,
-              capaianPembelajaranOpsional: t.rumusanTP,
-              elemen: t.elemen,
-              nilaiModerasiFokus: t.rekomendasiModerasi || parameters.nilaiModerasiFokus,
-            });
-            if (validationError) setValidationError(null);
+          const handleCycleSemesterBadge = () => {
+            const order: SemesterOption[] = ['Ganjil', 'Genap', 'Semua'];
+            const idx = order.indexOf(activeSemester);
+            const nextSmt = order[(idx + 1) % order.length];
+            handleSemesterChange(nextSmt);
           };
 
           const smtBadgeLabel =
@@ -563,89 +568,161 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               ? 'Semester 1 (Ganjil)'
               : activeSemester === 'Genap'
               ? 'Semester 2 (Genap)'
-              : 'Semua Semester';
+              : 'Semua Semester (Gabungan)';
+
+          const packageTopics = curriculumTopics.filter(
+            (t) => t.isPaketGabungan || t.judulTopik.includes('[PAKET')
+          );
+          const chapterTopics = curriculumTopics.filter(
+            (t) => !t.isPaketGabungan && !t.judulTopik.includes('[PAKET')
+          );
 
           return (
             <>
-            <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <label
+                    htmlFor="select-topik-materi"
+                    className="block text-xs font-semibold text-slate-800"
+                  >
+                    03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)
+                  </label>
+                  <p className="text-[11px] text-emerald-800 font-medium">
+                    Basis Data CP 020/2026 · Filter Aktif: {parameters.kelas} ({smtBadgeLabel}) ·{' '}
+                    {curriculumTopics.length} Pilihan
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCycleSemesterBadge}
+                  title="Klik untuk beralih antara Semester 1 (Ganjil), Semester 2 (Genap), dan Semua Semester"
+                  aria-label={`Filter Semester Aktif: ${smtBadgeLabel}. Klik untuk mengganti semester`}
+                  className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-400 rounded-full flex items-center gap-1 transition-colors cursor-pointer shrink-0 shadow-2xs"
+                >
+                  <Check className="w-3 h-3 text-emerald-800 shrink-0" />
+                  <span>
+                    {activeSemester === 'Ganjil'
+                      ? 'Smt. Ganjil'
+                      : activeSemester === 'Genap'
+                      ? 'Smt. Genap'
+                      : 'Semua Smt.'}
+                  </span>
+                  <RotateCcw className="w-2.5 h-2.5 text-emerald-700 ml-0.5 shrink-0" />
+                </button>
+              </div>
+
+              {/* Quick Semester Filter Pills inside Section 03 */}
+              <div
+                role="group"
+                aria-label="Filter Semester Topik Materi Seksi 03"
+                className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200"
+              >
+                {(
+                  [
+                    { value: 'Ganjil' as SemesterOption, label: 'Smt. 1 (Ganjil)' },
+                    { value: 'Genap' as SemesterOption, label: 'Smt. 2 (Genap)' },
+                    { value: 'Semua' as SemesterOption, label: 'Semua Semester' },
+                  ]
+                ).map((smtItem) => {
+                  const isActive = activeSemester === smtItem.value;
+                  return (
+                    <button
+                      key={smtItem.value}
+                      type="button"
+                      onClick={() => handleSemesterChange(smtItem.value)}
+                      aria-pressed={isActive}
+                      className={`py-1 px-2 text-[11px] font-semibold rounded transition-colors cursor-pointer text-center ${
+                        isActive
+                          ? 'bg-emerald-800 text-white shadow-2xs'
+                          : 'text-slate-700 hover:bg-white'
+                      }`}
+                    >
+                      {smtItem.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Deretan Chips "Topik Pilihan Cepat" DI ATAS Dropdown (Seluruh Bab & Paket Kelas/Semester Aktif) */}
+              {curriculumTopics.length > 0 && !isCustomMode && (
+                <div className="space-y-1.5 p-2.5 bg-emerald-50/50 border border-emerald-200/80 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-emerald-950 flex items-center gap-1">
+                      <Layers className="w-3.5 h-3.5 text-emerald-800 shrink-0" />
+                      <span>
+                        Topik Pilihan Cepat ({parameters.kelas} · {smtBadgeLabel}):
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-800">
+                      Klik 1x untuk pilih
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-0.5">
+                    {curriculumTopics.map((t) => {
+                      const isCurrent = matchedTopic?.id === t.id;
+                      const isPaket = t.isPaketGabungan || t.judulTopik.includes('[PAKET');
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => applySelectedTopic(t)}
+                          title={t.judulTopik}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-md transition-colors cursor-pointer border text-left ${
+                            isCurrent
+                              ? 'bg-emerald-900 text-white border-emerald-950 font-semibold shadow-2xs'
+                              : isPaket
+                              ? 'bg-amber-50 text-amber-950 hover:bg-amber-100 border-amber-300 font-semibold'
+                              : 'bg-white text-slate-800 hover:bg-emerald-100/70 border-slate-300'
+                          }`}
+                        >
+                          <Bookmark className="w-3 h-3 shrink-0" />
+                          <span className="line-clamp-1">{t.judulTopik}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Cascading Dropdown: Pilih Topik Materi Resmi (CP 020/2026) */}
               <div>
                 <label
                   htmlFor="select-topik-materi"
-                  className="block text-xs font-semibold text-slate-800"
+                  className="block text-xs font-medium text-slate-700 mb-1"
                 >
-                  03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)
+                  Pilih Topik Materi Resmi ({parameters.kelas} · {smtBadgeLabel})
                 </label>
-                <p className="text-[11px] text-emerald-800 font-medium">
-                  Basis Data CP 020/2026 · Filter Aktif: {parameters.kelas} ({smtBadgeLabel})
-                </p>
-              </div>
-              {matchedTopic && !isCustomMode && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-700" />
-                  <span>Smt. {matchedTopic.semester || activeSemester}</span>
-                </span>
-              )}
-            </div>
-
-            {/* Cascading Dropdown: Pilih Topik Materi Resmi (CP 020/2026) */}
-            <div>
-              <label
-                htmlFor="select-topik-materi"
-                className="block text-xs font-medium text-slate-700 mb-1"
-              >
-                Pilih Topik Materi Resmi ({parameters.kelas} · {smtBadgeLabel})
-              </label>
-              <select
-                id="select-topik-materi"
-                value={activeTopicId}
-                onChange={handleTopicSelectChange}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-700 font-medium"
-              >
-                <optgroup
-                  label={`Topik Resmi CP 020/2026 (${parameters.kelas} · ${smtBadgeLabel})`}
+                <select
+                  id="select-topik-materi"
+                  value={activeTopicId}
+                  onChange={handleTopicSelectChange}
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-700 font-medium"
                 >
-                  {curriculumTopics.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      [Smt. {t.semester || 'Ganjil'} · {t.elemen.join(', ')}] {t.judulTopik}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Opsi Kustomisasi Mandiri">
-                  <option value="custom">➕ Ketik / Kustomisasi Topik &amp; TP Sendiri</option>
-                </optgroup>
-              </select>
-            </div>
-
-            {/* Quick Chips for Active Class Topics */}
-            {curriculumTopics.length > 0 && !isCustomMode && (
-              <div className="space-y-1">
-                <span className="text-[11px] text-slate-500 block">
-                  Topik Pilihan Cepat ({parameters.kelas} · {smtBadgeLabel}):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {curriculumTopics.slice(0, 4).map((t) => {
-                    const isCurrent = matchedTopic?.id === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => handleSelectQuickBadge(t)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-md transition-colors cursor-pointer border ${
-                          isCurrent
-                            ? 'bg-emerald-800 text-white border-emerald-900 font-semibold'
-                            : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-emerald-200'
-                        }`}
-                      >
-                        <Bookmark className="w-3 h-3 shrink-0" />
-                        <span className="truncate max-w-[200px]">
-                          [{t.semester}] {t.judulTopik}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                  {packageTopics.length > 0 && (
+                    <optgroup
+                      label={`📚 Paket Gabungan Ujian (${parameters.kelas} · ${smtBadgeLabel})`}
+                    >
+                      {packageTopics.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.judulTopik}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup
+                    label={`📖 Daftar Bab & Elemen Inti CP 020/2026 (${parameters.kelas} · ${smtBadgeLabel})`}
+                  >
+                    {chapterTopics.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.judulTopik}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Opsi Kustomisasi Mandiri">
+                    <option value="custom">➕ Ketik / Kustomisasi Topik &amp; TP Sendiri</option>
+                  </optgroup>
+                </select>
               </div>
-            )}
 
             {/* View Card for Selected Official Topic */}
             {!isCustomMode && matchedTopic ? (

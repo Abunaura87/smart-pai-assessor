@@ -9,6 +9,7 @@ import {
 } from '../types/assessment';
 import { calculateDifficultyAllocation, formatKelasSemester, getFaseProfile } from '../utils/paiRules';
 import { selectDistinctNarrativeSeed, selectQuestionSeed } from './narrativeBank';
+import { getChapterTopicsForClassSemester, isPaketGabunganTopic } from './curriculumData';
 
 const BASE_PRESET_PACKAGES: AssessmentPackage[] = [
   {
@@ -1265,8 +1266,20 @@ export function buildCustomFallbackPackage(
   const rubrikAnalitik: AnalyticRubricRow[] = [];
   const usedStimuli = new Set<string>();
 
+  const isCombinedPkg = isPaketGabunganTopic(params.topikMateri);
+  const allFiveElemen: ElemenPAI[] = [
+    'Al-Qur\'an dan Hadis',
+    'Akidah',
+    'Akhlak',
+    'Fikih',
+    'Sejarah Peradaban Islam (SPI)',
+  ];
   const elemenList: ElemenPAI[] =
-    params.elemen.length > 0 ? params.elemen : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
+    isCombinedPkg && !params.topikMateri.toUpperCase().includes('ATS')
+      ? allFiveElemen
+      : params.elemen.length > 0
+      ? params.elemen
+      : ['Al-Qur\'an dan Hadis', 'Akhlak', 'Fikih'];
 
   let currentNo = 1;
   const targetSemester: 'Ganjil' | 'Genap' | undefined =
@@ -1279,6 +1292,12 @@ export function buildCustomFallbackPackage(
       : params.jenisUjian?.includes('Genap') || params.jenisUjian?.includes('Akhir Jenjang')
       ? 'Genap'
       : 'Ganjil';
+
+  const chapterTopicsForClass = getChapterTopicsForClassSemester(
+    params.fase,
+    params.kelas,
+    params.semester || targetSemester || 'Ganjil'
+  );
 
   for (const group of effectiveCounts) {
     for (let i = 0; i < group.jumlah; i++) {
@@ -1305,18 +1324,30 @@ export function buildCustomFallbackPackage(
       };
       const bloomLabel = bloomMap[levelCode];
 
-      const cpText =
-        no === 1 && params.capaianPembelajaranOpsional?.trim()
-          ? params.capaianPembelajaranOpsional.trim()
-          : seed.cpRingkas ||
-            params.capaianPembelajaranOpsional?.trim() ||
-            'Memahami dan mengamalkan ajaran Islam secara tepat.';
-      const materiPokok =
-        no === 1 && params.topikMateri?.trim()
-          ? params.topikMateri.trim()
-          : seed.materiPokok ||
-            params.topikMateri?.trim() ||
-            `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
+      const matchingChapterTopic = chapterTopicsForClass.find((ct) =>
+        ct.elemen.includes(elemen)
+      );
+
+      const cpText = isCombinedPkg
+        ? seed.cpRingkas ||
+          matchingChapterTopic?.rumusanTP ||
+          params.capaianPembelajaranOpsional?.trim() ||
+          'Memahami dan mengamalkan ajaran Islam secara tepat.'
+        : no === 1 && params.capaianPembelajaranOpsional?.trim()
+        ? params.capaianPembelajaranOpsional.trim()
+        : seed.cpRingkas ||
+          params.capaianPembelajaranOpsional?.trim() ||
+          'Memahami dan mengamalkan ajaran Islam secara tepat.';
+
+      const materiPokok = isCombinedPkg
+        ? seed.materiPokok ||
+          matchingChapterTopic?.materiPokok ||
+          `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`
+        : no === 1 && params.topikMateri?.trim()
+        ? params.topikMateri.trim()
+        : seed.materiPokok ||
+          params.topikMateri?.trim() ||
+          `${elemen} — ${seed.indikatorTopik.slice(0, 48)}`;
 
       let indikatorABCD = '';
       if (group.bentuk === 'Pilihan Ganda') {
