@@ -172,8 +172,8 @@ export function formatKelasDisplay(kelas: string): string {
   return map[n] || kelas;
 }
 
-function escapeHtml(str: string): string {
-  return str
+function escapeHtml(str: unknown): string {
+  return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -1283,12 +1283,24 @@ export function buildExcelDocContent(
   );
   const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
 
+  const getQuestionMaxScore = (s: AssessmentPackage['butirSoal'][number]): number => {
+    const rubricMatch = pkg.pedomanPenskoran?.rubrikAnalitik?.find(
+      (r) => r.nomorSoal === s.nomor
+    );
+    if (rubricMatch) return rubricMatch.skorMaksimal;
+    const bobotMatch = pkg.pedomanPenskoran?.bobotPerBentuk?.find(
+      (b) => b.bentuk === s.bentukSoal
+    );
+    if (bobotMatch) return bobotMatch.skorPerSoal;
+    return s.bentukSoal === 'Uraian' ? 4 : s.bentukSoal === 'Isian Singkat' ? 2 : 1;
+  };
+
   const kisiRowsHtml = pkg.kisiKisi
     .map(
       (r) => `<tr>
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${r.no}</td>
         <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.elemen)} (${escapeHtml(
-          r.dimensiCinta || ELEMEN_DIMENSI_CINTA[r.elemen] || '-'
+          ELEMEN_DIMENSI_CINTA[r.elemen] || '-'
         )})</td>
         <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
           r.capaianTujuanPembelajaran
@@ -1296,18 +1308,54 @@ export function buildExcelDocContent(
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
           r.kelasSmt || defaultKelasSmt
         )}</td>
-        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.materiPokok)}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.materiPokok || pkg.parameters.topikMateri
+        )}</td>
         <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.indikatorSoalABCD)}</td>
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
-          r.levelKognitif
+          r.levelKognitif || r.levelCode
         )}</td>
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
           r.bentukSoal
         )}</td>
-        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${r.nomorSoal}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.nomorSoal || r.no
+        )}</td>
       </tr>`
     )
     .join('');
+
+  const pemetaanUraianSectionHtml =
+    pkg.pemetaanUraian && pkg.pemetaanUraian.length > 0
+      ? `
+    <tr><td colspan="9"></td></tr>
+    <tr>
+      <td colspan="9" style="font-weight:bold; font-size:12pt;">PEMETAAN SOAL URAIAN / ESSAY</td>
+    </tr>
+    <tr style="background-color:#e0f2fe; font-weight:bold;">
+      <th style="border:1pt solid #000000; padding:6pt;">No</th>
+      <th colspan="4" style="border:1pt solid #000000; padding:6pt;">Tujuan Pembelajaran (TP)</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Kelas / Smt</th>
+      <th colspan="3" style="border:1pt solid #000000; padding:6pt;">Konten / Materi Pokok</th>
+    </tr>
+    ${pkg.pemetaanUraian
+      .map(
+        (u) => `<tr>
+      <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${u.no}</td>
+      <td colspan="4" style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+        u.tujuanPembelajaran
+      )}</td>
+      <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+        u.kelasSemester
+      )}</td>
+      <td colspan="3" style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+        u.kontenMateri
+      )}</td>
+    </tr>`
+      )
+      .join('')}
+  `
+      : '';
 
   const kunciRowsHtml = pkg.butirSoal
     .map(
@@ -1316,14 +1364,22 @@ export function buildExcelDocContent(
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
           s.bentukSoal
         )}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(s.elemen)}</td>
         <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
-          s.levelKognitif
+          `${s.levelCode} (${s.taksonomiBloom})`
         )}</td>
         <td style="border:1pt solid #000000; padding:4pt; font-weight:bold;">${escapeHtml(
           s.kunciJawaban
         )}</td>
-        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${s.skorMaksimal}</td>
-        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(s.pembahasan)}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${getQuestionMaxScore(
+          s
+        )}</td>
+        <td colspan="2" style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          s.pembahasanSingkat
+        )}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          s.dalilAtauKonsep
+        )}</td>
       </tr>`
     )
     .join('');
@@ -1391,17 +1447,20 @@ xmlns="http://www.w3.org/TR/REC-html40">
       <th style="border:1pt solid #000000; padding:6pt;">Nomor Soal</th>
     </tr>
     ${kisiRowsHtml}
+    ${pemetaanUraianSectionHtml}
     <tr><td colspan="9"></td></tr>
     <tr>
-      <td colspan="6" style="font-weight:bold; font-size:12pt;">DAFTAR KUNCI JAWABAN, SKOR &amp; PEMBAHASAN</td>
+      <td colspan="9" style="font-weight:bold; font-size:12pt;">DAFTAR KUNCI JAWABAN, SKOR &amp; PEMBAHASAN PEDAGOGIS</td>
     </tr>
     <tr style="background-color:#fef3c7; font-weight:bold;">
       <th style="border:1pt solid #000000; padding:6pt;">No Soal</th>
       <th style="border:1pt solid #000000; padding:6pt;">Bentuk Soal</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Elemen PAI</th>
       <th style="border:1pt solid #000000; padding:6pt;">Level Kognitif</th>
       <th style="border:1pt solid #000000; padding:6pt;">Kunci Jawaban</th>
       <th style="border:1pt solid #000000; padding:6pt;">Skor Maks</th>
-      <th style="border:1pt solid #000000; padding:6pt;">Pembahasan Pedagogis</th>
+      <th colspan="2" style="border:1pt solid #000000; padding:6pt;">Pembahasan Singkat</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Dalil / Konsep Utama</th>
     </tr>
     ${kunciRowsHtml}
   </table>
