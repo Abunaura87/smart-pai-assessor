@@ -22,6 +22,7 @@ import { ParameterPanel } from './components/ParameterPanel';
 import { AssessmentDocument } from './components/AssessmentDocument';
 import { KaidahValidatorSection } from './components/KaidahValidatorSection';
 import { KopPejabatForm } from './components/KopPejabatForm';
+import { BookCheck, Layers, Loader2, Lock, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
 
 export default function App() {
   const [activePackage, setActivePackage] = useState<AssessmentPackage>(PRESET_PACKAGES[0]);
