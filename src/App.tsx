@@ -355,13 +355,13 @@ export default function App() {
               Pekerti
             </div>
             <div>
-              Acuan: Kepka Nomor 020 Tahun 2026 · 5 Dimensi Cinta · Standar KKG/MGMP PAI & Kemenag
+              Acuan: CP. Nomor 020 Tahun 2026 · 5 Dimensi Cinta · Standar KKG/MGMP PAI & Kemenag
               RI
             </div>
           </div>
 
           {/* Watermark Hak Cipta Resmi (@abunaura) */}
-          <div className="relative overflow-hidden border-t-2 border-[#b8860b]/70 bg-gradient-to-b from-[#9c6f44] via-[#b08254] to-[#8a5e35] py-4 px-6 select-none shadow-inner">
+          <div className="relative overflow-hidden border-t-2 border-[#b8860b]/70 bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-950 py-4 px-6 select-none shadow-inner">
             {/* Garis panel vertikal ala kayu klasik seperti pada referensi */}
             <div
               aria-hidden="true"
