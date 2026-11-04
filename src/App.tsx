@@ -22,7 +22,8 @@ import { ParameterPanel } from './components/ParameterPanel';
 import { AssessmentDocument } from './components/AssessmentDocument';
 import { KaidahValidatorSection } from './components/KaidahValidatorSection';
 import { KopPejabatForm } from './components/KopPejabatForm';
-import { BookCheck, Layers, Loader2, Lock, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
+import { AppGuideModal } from './components/AppGuideModal';
+import { BookCheck, BookOpen, Layers, Loader2, Lock, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
 
 export default function App() {
   const [activePackage, setActivePackage] = useState<AssessmentPackage>(PRESET_PACKAGES[0]);
@@ -31,6 +32,7 @@ export default function App() {
     loadKopConfigFromStorage(PRESET_PACKAGES[0])
   );
   const [isKopModalOpen, setIsKopModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -178,6 +180,7 @@ export default function App() {
         onNavigateSection={handleNavigateSection}
         onPrintDocument={handlePrint}
         onOpenKopModal={() => setIsKopModalOpen(true)}
+        onOpenGuideModal={() => setIsGuideModalOpen(true)}
       />
 
       {/* Main Content Area — Automatically expands horizontally when sidebar is collapsed */}
@@ -217,6 +220,15 @@ export default function App() {
 
               {/* Action Buttons in Workspace Header */}
               <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsGuideModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-950 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span>📖 Panduan Aplikasi</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setIsKopModalOpen(true)}
@@ -431,6 +443,13 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Modal: Panduan Penggunaan Aplikasi (4 Tab Interaktif) */}
+      <AppGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        onOpenKopModal={() => setIsKopModalOpen(true)}
+      />
     </div>
   );
 }
