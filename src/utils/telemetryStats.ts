@@ -35,10 +35,23 @@ export interface UsageEventRecord {
   createdAtIso: string;
 }
 
+export type JenjangCode = 'SD' | 'SMP' | 'SMA';
+
 export interface CategoryStatItem {
   label: string;
   count: number;
   percentage: number;
+}
+
+export interface DistributionChartItem extends CategoryStatItem {
+  key: string;
+  shortKey: string;
+  fullLabel: string;
+  jenjang: JenjangCode;
+  susunSoal: number;
+  unduhan: number;
+  kunjungan: number;
+  total: number;
 }
 
 export interface DailyActivityPoint {
@@ -62,7 +75,8 @@ export interface AggregatedUsageStats {
     pdf: number;
     copy: number;
   };
-  byFase: CategoryStatItem[];
+  byJenjang: DistributionChartItem[];
+  byFase: DistributionChartItem[];
   byKelas: CategoryStatItem[];
   bySemester: CategoryStatItem[];
   byJenisUjian: CategoryStatItem[];
@@ -70,6 +84,44 @@ export interface AggregatedUsageStats {
   topSchools: CategoryStatItem[];
   dailyTrend: DailyActivityPoint[];
   recentEvents: UsageEventRecord[];
+}
+
+export function resolveJenjangFromEvent(
+  fase: string,
+  kelas = '',
+  namaSekolah = ''
+): JenjangCode {
+  const normFase = String(fase ?? '').trim().toUpperCase();
+  if (normFase.includes('FASE D') || normFase === 'D') {
+    return 'SMP';
+  }
+  if (
+    normFase.includes('FASE E') ||
+    normFase.includes('FASE F') ||
+    normFase === 'E' ||
+    normFase === 'F'
+  ) {
+    return 'SMA';
+  }
+  if (
+    normFase.includes('FASE A') ||
+    normFase.includes('FASE B') ||
+    normFase.includes('FASE C') ||
+    normFase === 'A' ||
+    normFase === 'B' ||
+    normFase === 'C'
+  ) {
+    return 'SD';
+  }
+
+  const combined = `${kelas} ${namaSekolah}`.toUpperCase();
+  if (/\b(SMP|SMPN|MTS|MTSN|KELAS 7|KELAS 8|KELAS 9)\b/.test(combined)) {
+    return 'SMP';
+  }
+  if (/\b(SMA|SMAN|SMK|SMKN|MA|MAN|KELAS 10|KELAS 11|KELAS 12)\b/.test(combined)) {
+    return 'SMA';
+  }
+  return 'SD';
 }
 
 export function sanitizeTelemetryId(raw: unknown, fallbackPrefix = 'id'): string {
@@ -162,6 +214,87 @@ function buildSortedCategoryStats(
     }));
 }
 
+const FASE_METADATA: ReadonlyArray<{
+  key: string;
+  shortKey: string;
+  label: string;
+  fullLabel: string;
+  jenjang: JenjangCode;
+}> = [
+  {
+    key: 'Fase A',
+    shortKey: 'Fase A',
+    label: 'Fase A',
+    fullLabel: 'Fase A (Kelas 1–2 SD/MI)',
+    jenjang: 'SD',
+  },
+  {
+    key: 'Fase B',
+    shortKey: 'Fase B',
+    label: 'Fase B',
+    fullLabel: 'Fase B (Kelas 3–4 SD/MI)',
+    jenjang: 'SD',
+  },
+  {
+    key: 'Fase C',
+    shortKey: 'Fase C',
+    label: 'Fase C',
+    fullLabel: 'Fase C (Kelas 5–6 SD/MI)',
+    jenjang: 'SD',
+  },
+  {
+    key: 'Fase D',
+    shortKey: 'Fase D',
+    label: 'Fase D',
+    fullLabel: 'Fase D (Kelas 7–9 SMP/MTs)',
+    jenjang: 'SMP',
+  },
+  {
+    key: 'Fase E',
+    shortKey: 'Fase E',
+    label: 'Fase E',
+    fullLabel: 'Fase E (Kelas 10 SMA/SMK/MA)',
+    jenjang: 'SMA',
+  },
+  {
+    key: 'Fase F',
+    shortKey: 'Fase F',
+    label: 'Fase F',
+    fullLabel: 'Fase F (Kelas 11–12 SMA/SMK/MA)',
+    jenjang: 'SMA',
+  },
+];
+
+const JENJANG_METADATA: ReadonlyArray<{
+  key: JenjangCode;
+  shortKey: string;
+  label: string;
+  fullLabel: string;
+  jenjang: JenjangCode;
+}> = [
+  {
+    key: 'SD',
+    shortKey: 'SD/MI',
+    label: 'SD / MI',
+    fullLabel: 'SD / MI (Fase A, B, C · Kelas 1–6)',
+    jenjang: 'SD',
+  },
+  {
+    key: 'SMP',
+    shortKey: 'SMP/MTs',
+    label: 'SMP / MTs',
+    fullLabel: 'SMP / MTs (Fase D · Kelas 7–9)',
+    jenjang: 'SMP',
+  },
+  {
+    key: 'SMA',
+    shortKey: 'SMA/SMK',
+    label: 'SMA / SMK / MA',
+    fullLabel: 'SMA / SMK / MA (Fase E, F · Kelas 10–12)',
+    jenjang: 'SMA',
+  },
+];
+
 export function computeUsageStatistics(events: UsageEventRecord[]): AggregatedUsageStats {
   const deduplicatedMap = new Map<string, UsageEventRecord>();
   for (const ev of events) {
@@ -182,7 +315,22 @@ export function computeUsageStatistics(events: UsageEventRecord[]): AggregatedUs
   let pdfExports = 0;
   let copyExports = 0;
 
-  const faseCounts = new Map<string, number>();
+  const faseBreakdown = new Map<
+    string,
+    { susunSoal: number; unduhan: number; kunjungan: number }
+  >();
+  for (const meta of FASE_METADATA) {
+    faseBreakdown.set(meta.key, { susunSoal: 0, unduhan: 0, kunjungan: 0 });
+  }
+
+  const jenjangBreakdown = new Map<
+    JenjangCode,
+    { susunSoal: number; unduhan: number; kunjungan: number }
+  >();
+  for (const meta of JENJANG_METADATA) {
+    jenjangBreakdown.set(meta.key, { susunSoal: 0, unduhan: 0, kunjungan: 0 });
+  }
+
   const kelasCounts = new Map<string, number>();
   const semesterCounts = new Map<string, number>();
   const ujianCounts = new Map<string, number>();
@@ -192,23 +340,39 @@ export function computeUsageStatistics(events: UsageEventRecord[]): AggregatedUs
   for (const ev of allEvents) {
     visitorSet.add(ev.visitorId);
 
+    const normalizedFase = FASE_METADATA.some((m) => m.key === ev.fase) ? ev.fase : 'Fase A';
+    const fBucket = faseBreakdown.get(normalizedFase)!;
+    const jenjangCode = resolveJenjangFromEvent(normalizedFase, ev.kelas, ev.namaSekolah);
+    const jBucket = jenjangBreakdown.get(jenjangCode)!;
+
     if (ev.eventType === 'visit') {
       totalVisits += 1;
+      fBucket.kunjungan += 1;
+      jBucket.kunjungan += 1;
     } else if (ev.eventType === 'generate_soal' || ev.eventType === 'preset_load') {
       totalGenerated += 1;
+      fBucket.susunSoal += 1;
+      jBucket.susunSoal += 1;
     } else if (ev.eventType === 'export_word') {
       wordExports += 1;
+      fBucket.unduhan += 1;
+      jBucket.unduhan += 1;
     } else if (ev.eventType === 'export_excel') {
       excelExports += 1;
+      fBucket.unduhan += 1;
+      jBucket.unduhan += 1;
     } else if (ev.eventType === 'export_pdf') {
       pdfExports += 1;
+      fBucket.unduhan += 1;
+      jBucket.unduhan += 1;
     } else if (ev.eventType === 'copy_naskah') {
       copyExports += 1;
+      fBucket.unduhan += 1;
+      jBucket.unduhan += 1;
     }
 
     // Count curriculum distribution across substantive assessment actions
     if (ev.eventType !== 'visit') {
-      faseCounts.set(ev.fase, (faseCounts.get(ev.fase) ?? 0) + 1);
       kelasCounts.set(ev.kelas, (kelasCounts.get(ev.kelas) ?? 0) + 1);
       const normSmt =
         ev.semester === 'Semua'
@@ -230,15 +394,47 @@ export function computeUsageStatistics(events: UsageEventRecord[]): AggregatedUs
   const effectiveVisits = Math.max(totalVisits, visitorSet.size);
   const totalExports = wordExports + excelExports + pdfExports + copyExports;
   const curriculumActionCount = allEvents.filter((e) => e.eventType !== 'visit').length;
+  const totalEventsDenom = Math.max(1, allEvents.length);
 
-  const byFase = buildSortedCategoryStats(faseCounts, curriculumActionCount, [
-    'Fase A',
-    'Fase B',
-    'Fase C',
-    'Fase D',
-    'Fase E',
-    'Fase F',
-  ]);
+  const byFase: DistributionChartItem[] = FASE_METADATA.map((meta) => {
+    const b = faseBreakdown.get(meta.key) ?? { susunSoal: 0, unduhan: 0, kunjungan: 0 };
+    const substantive = b.susunSoal + b.unduhan;
+    const total = substantive + b.kunjungan;
+    const count = curriculumActionCount > 0 ? substantive : total;
+    return {
+      key: meta.key,
+      shortKey: meta.shortKey,
+      label: meta.label,
+      fullLabel: meta.fullLabel,
+      jenjang: meta.jenjang,
+      susunSoal: b.susunSoal,
+      unduhan: b.unduhan,
+      kunjungan: b.kunjungan,
+      count,
+      total,
+      percentage: Math.round((total / totalEventsDenom) * 100),
+    };
+  });
+
+  const byJenjang: DistributionChartItem[] = JENJANG_METADATA.map((meta) => {
+    const b = jenjangBreakdown.get(meta.key) ?? { susunSoal: 0, unduhan: 0, kunjungan: 0 };
+    const substantive = b.susunSoal + b.unduhan;
+    const total = substantive + b.kunjungan;
+    const count = curriculumActionCount > 0 ? substantive : total;
+    return {
+      key: meta.key,
+      shortKey: meta.shortKey,
+      label: meta.label,
+      fullLabel: meta.fullLabel,
+      jenjang: meta.jenjang,
+      susunSoal: b.susunSoal,
+      unduhan: b.unduhan,
+      kunjungan: b.kunjungan,
+      count,
+      total,
+      percentage: Math.round((total / totalEventsDenom) * 100),
+    };
+  });
 
   const bySemester = buildSortedCategoryStats(semesterCounts, curriculumActionCount, [
     'Semester Ganjil',
@@ -310,6 +506,7 @@ export function computeUsageStatistics(events: UsageEventRecord[]): AggregatedUs
       pdf: pdfExports,
       copy: copyExports,
     },
+    byJenjang,
     byFase,
     byKelas,
     bySemester,

@@ -1,4 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { ADMIN_EMAIL } from '../firebase';
 import {
   buildAdminStatsExcelContent,
@@ -9,6 +20,7 @@ import {
 import { updateCustomAdminPassword } from '../utils/adminAuth';
 import {
   computeUsageStatistics,
+  DistributionChartItem,
   formatEventTypeLabel,
   UsageEventRecord,
   UsageEventType,
@@ -27,6 +39,7 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
+  GraduationCap,
   KeyRound,
   Layers,
   Loader2,
@@ -39,6 +52,51 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+
+const JENJANG_BAR_COLORS: Record<'SD' | 'SMP' | 'SMA', string> = {
+  SD: '#047857', // Emerald 700
+  SMP: '#d97706', // Amber 600
+  SMA: '#1d4ed8', // Blue 700
+};
+
+interface CustomDistributionTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: DistributionChartItem }>;
+}
+
+const CustomDistributionTooltip: React.FC<CustomDistributionTooltipProps> = ({
+  active,
+  payload,
+}) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-slate-900 text-white border border-slate-700 rounded-xl p-3 shadow-lg text-xs space-y-1.5 min-w-[210px] tabular-nums">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-700/80 pb-1.5">
+        <span className="font-bold text-amber-300">{data.fullLabel}</span>
+        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-semibold text-emerald-300">
+          {data.percentage}%
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-slate-300">
+        <span>Susun Paket Soal:</span>
+        <strong className="text-emerald-400">{data.susunSoal}</strong>
+      </div>
+      <div className="flex items-center justify-between text-slate-300">
+        <span>Unduhan (Word/Excel/PDF):</span>
+        <strong className="text-amber-400">{data.unduhan}</strong>
+      </div>
+      <div className="flex items-center justify-between text-slate-300">
+        <span>Kunjungan Sesi:</span>
+        <strong className="text-sky-400">{data.kunjungan}</strong>
+      </div>
+      <div className="flex items-center justify-between pt-1 border-t border-slate-700/80 font-bold text-white">
+        <span>Total Aktivitas:</span>
+        <span>{data.total} log</span>
+      </div>
+    </div>
+  );
+};
 
 interface AdminStatsDashboardProps {
   adminEmail: string;
@@ -65,6 +123,7 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [currentPasswordInput, setCurrentPasswordInput] = useState('');
   const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [chartViewMode, setChartViewMode] = useState<'total' | 'rincian'>('rincian');
   const [passwordChangeFeedback, setPasswordChangeFeedback] = useState<{
     ok: boolean;
     message: string;
@@ -369,7 +428,7 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
       )}
 
       {/* 4 Primary KPI Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 tabular-nums">
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Total Kunjungan &amp; Sesi</span>
@@ -452,102 +511,319 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
         </div>
       </section>
 
-      {/* Row 2: 7-Day Activity Trend + Distribution by Fase (Fase A - Fase F) */}
+      {/* Visual Recharts BarCharts: Distribusi Jenjang (SD/SMP/SMA) & Distribusi Fase (A/B/C/D/E/F) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* 7-Day Activity Bar Chart */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Left: Grafik Batang Distribusi Penggunaan Berdasarkan Jenjang (SD / SMP / SMA) */}
+        <div
+          data-testid="jenjang-bar-chart"
+          className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 space-y-4 flex flex-col justify-between"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-emerald-800" />
-                <span>Tren Aktivitas Harian (7 Hari Terakhir)</span>
+                <GraduationCap className="w-4 h-4 text-emerald-800" />
+                <span>Distribusi Penggunaan per Jenjang (SD / SMP / SMA)</span>
               </h2>
               <p className="text-xs text-slate-500">
-                Rincian kunjungan, penyusunan paket soal, dan unduhan naskah per hari
+                Perbandingan aktivitas guru PAIBP pada jenjang SD/MI, SMP/MTs, dan SMA/SMK/MA
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleSimulateTeacherActivity}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
-            >
-              <PlusCircle className="w-3.5 h-3.5 text-emerald-800" />
-              <span>+ Simulasi Aktivitas Guru</span>
-            </button>
-          </div>
 
-          <div className="grid grid-cols-7 gap-2 pt-4 items-end h-44 border-b border-slate-200 pb-3">
-            {stats.dailyTrend.map((day) => {
-              const heightPct = Math.max(10, Math.round((day.total / maxDailyTotal) * 100));
-              return (
-                <div
-                  key={day.dateKey}
-                  className="flex flex-col items-center justify-end h-full gap-1.5"
-                >
-                  <span className="text-[11px] font-bold text-slate-700">{day.total}</span>
-                  <div className="w-full max-w-[38px] bg-slate-100 rounded-t-lg h-28 flex items-end overflow-hidden">
-                    <div
-                      style={{ height: `${heightPct}%` }}
-                      className="w-full bg-emerald-700 hover:bg-emerald-800 transition-all rounded-t-lg"
-                      title={`${day.label}: ${day.visits} kunjungan, ${day.generations} susun soal, ${day.exports} unduhan`}
-                    />
-                  </div>
-                  <span className="text-[10px] font-medium text-slate-500 text-center">
-                    {day.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-            <span>Total Aktivitas Tercatat: {stats.totalEvents} log</span>
-            <div className="flex items-center gap-4">
-              <span className="inline-flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5 text-blue-700" /> Word: {stats.exportBreakdown.word}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <FileSpreadsheet className="w-3.5 h-3.5 text-amber-700" /> Excel:{' '}
-                {stats.exportBreakdown.excel}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Printer className="w-3.5 h-3.5 text-emerald-700" /> PDF:{' '}
-                {stats.exportBreakdown.pdf}
-              </span>
+            <div className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setChartViewMode('rincian')}
+                className={`px-2 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                  chartViewMode === 'rincian'
+                    ? 'bg-white text-emerald-950 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Rincian
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartViewMode('total')}
+                className={`px-2 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                  chartViewMode === 'total'
+                    ? 'bg-white text-emerald-950 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Total
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Fase A - Fase F Distribution */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-800" />
-              <span>Distribusi Penggunaan per Fase (Fase A–F)</span>
-            </h2>
-            <p className="text-xs text-slate-500">
-              Proporsi penyusunan soal &amp; unduhan berdasarkan Fase Kurikulum Merdeka
-            </p>
+          <div className="h-[250px] w-full min-w-0 pt-2">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart
+                data={stats.byJenjang}
+                margin={{ top: 10, right: 12, left: -16, bottom: 4 }}
+                barGap={4}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="shortKey"
+                  tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
+                  axisLine={{ stroke: '#cbd5e1' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  content={<CustomDistributionTooltip />}
+                  cursor={{ fill: 'rgba(15, 23, 42, 0.04)' }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }}
+                  iconType="circle"
+                />
+                {chartViewMode === 'rincian' ? (
+                  <>
+                    <Bar
+                      dataKey="susunSoal"
+                      name="Susun Soal"
+                      fill="#047857"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="unduhan"
+                      name="Unduhan Dokumen"
+                      fill="#d97706"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="kunjungan"
+                      name="Kunjungan"
+                      fill="#0284c7"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={28}
+                    />
+                  </>
+                ) : (
+                  <Bar
+                    dataKey="total"
+                    name="Total Aktivitas Jenjang"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={48}
+                  >
+                    {stats.byJenjang.map((entry) => (
+                      <Cell key={entry.key} fill={JENJANG_BAR_COLORS[entry.jenjang]} />
+                    ))}
+                  </Bar>
+                )}
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          <div className="space-y-3">
-            {stats.byFase.map((item) => (
-              <div key={item.label} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-800">{item.label}</span>
-                  <span className="text-slate-600">
-                    <strong className="text-slate-900">{item.count}</strong> aktivitas (
-                    {item.percentage}%)
-                  </span>
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 tabular-nums">
+            {stats.byJenjang.map((j) => (
+              <div
+                key={j.key}
+                className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200/80 space-y-0.5"
+              >
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-slate-800">{j.shortKey}</span>
+                  <span className="font-semibold text-emerald-800">{j.percentage}%</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: `${Math.max(item.count > 0 ? 6 : 0, item.percentage)}%` }}
-                    className="h-full bg-emerald-700 rounded-full"
-                  />
+                <div className="text-sm font-bold text-slate-900">
+                  {j.total}{' '}
+                  <span className="text-[11px] font-normal text-slate-500">aktivitas</span>
+                </div>
+                <div className="text-[10px] text-slate-500 truncate">
+                  {j.susunSoal} soal · {j.unduhan} unduh
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Right: Grafik Batang Distribusi Penggunaan Berdasarkan Fase (Fase A - Fase F) */}
+        <div
+          data-testid="fase-bar-chart"
+          className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-6 space-y-4 flex flex-col justify-between"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-800" />
+                <span>Distribusi Penggunaan per Fase (Fase A – Fase F)</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Tren penyusunan soal &amp; unduhan naskah berdasarkan Fase Kurikulum Merdeka (CP 020/2026)
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-900 border border-emerald-200 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-700" /> Fase A–C (SD/MI)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-600" /> Fase D (SMP/MTs)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200 font-medium">
+                <span className="w-2 h-2 rounded-full bg-blue-700" /> Fase E–F (SMA/SMK)
+              </span>
+            </div>
+          </div>
+
+          <div className="h-[250px] w-full min-w-0 pt-2">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart
+                data={stats.byFase}
+                margin={{ top: 10, right: 12, left: -16, bottom: 4 }}
+                barGap={3}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
+                  axisLine={{ stroke: '#cbd5e1' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  content={<CustomDistributionTooltip />}
+                  cursor={{ fill: 'rgba(15, 23, 42, 0.04)' }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }}
+                  iconType="circle"
+                />
+                {chartViewMode === 'rincian' ? (
+                  <>
+                    <Bar
+                      dataKey="susunSoal"
+                      name="Susun Soal"
+                      fill="#047857"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={22}
+                    />
+                    <Bar
+                      dataKey="unduhan"
+                      name="Unduhan Dokumen"
+                      fill="#d97706"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={22}
+                    />
+                    <Bar
+                      dataKey="kunjungan"
+                      name="Kunjungan"
+                      fill="#0284c7"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={22}
+                    />
+                  </>
+                ) : (
+                  <Bar
+                    dataKey="total"
+                    name="Total Aktivitas Fase"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={38}
+                  >
+                    {stats.byFase.map((entry) => (
+                      <Cell key={entry.key} fill={JENJANG_BAR_COLORS[entry.jenjang]} />
+                    ))}
+                  </Bar>
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 tabular-nums">
+            {stats.byFase.map((item) => (
+              <div
+                key={item.key}
+                className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200/80 space-y-0.5"
+              >
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-slate-800">{item.label}</span>
+                  <span className="font-semibold text-emerald-800">{item.percentage}%</span>
+                </div>
+                <div className="text-xs font-bold text-slate-900">
+                  {item.total} <span className="font-normal text-slate-500">aktivitas</span>
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  {item.susunSoal} soal · {item.unduhan} unduh
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Row 3: 7-Day Activity Trend */}
+      <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 tabular-nums">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-emerald-800" />
+              <span>Tren Aktivitas Harian (7 Hari Terakhir)</span>
+            </h2>
+            <p className="text-xs text-slate-500">
+              Rincian kunjungan, penyusunan paket soal, dan unduhan naskah per hari
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSimulateTeacherActivity}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-emerald-800" />
+            <span>+ Simulasi Aktivitas Guru</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-2 pt-4 items-end h-40 border-b border-slate-200 pb-3">
+          {stats.dailyTrend.map((day) => {
+            const heightPct = Math.max(10, Math.round((day.total / maxDailyTotal) * 100));
+            return (
+              <div
+                key={day.dateKey}
+                className="flex flex-col items-center justify-end h-full gap-1.5"
+              >
+                <span className="text-[11px] font-bold text-slate-700">{day.total}</span>
+                <div className="w-full max-w-[42px] bg-slate-100 rounded-t-lg h-24 flex items-end overflow-hidden">
+                  <div
+                    style={{ height: `${heightPct}%` }}
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 transition-all rounded-t-lg"
+                    title={`${day.label}: ${day.visits} kunjungan, ${day.generations} susun soal, ${day.exports} unduhan`}
+                  />
+                </div>
+                <span className="text-[10px] font-medium text-slate-500 text-center">
+                  {day.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+          <span>Total Aktivitas Tercatat: {stats.totalEvents} log</span>
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5 text-blue-700" /> Word: {stats.exportBreakdown.word}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-amber-700" /> Excel:{' '}
+              {stats.exportBreakdown.excel}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Printer className="w-3.5 h-3.5 text-emerald-700" /> PDF:{' '}
+              {stats.exportBreakdown.pdf}
+            </span>
           </div>
         </div>
       </section>
