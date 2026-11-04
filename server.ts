@@ -8,9 +8,17 @@ import { createServer as createViteServer } from 'vite';
 import { AssessmentParameters } from './src/types/assessment';
 import { generateAssessmentWithGemini } from './src/server/geminiAssessor';
 import { sanitizeUsageEventRecord, UsageEventRecord } from './src/utils/telemetryStats';
+import {
+  AUTHORIZED_ADMIN_EMAIL,
+  computeAdminSecretDigest,
+  verifyAdminCredentialsPure,
+} from './src/utils/adminAuth';
 
 const PORT = 3000;
 const TELEMETRY_DATA_PATH = path.join(process.cwd(), 'public', 'assets', 'telemetry-store.json');
+let serverCustomPasswordDigest: string | null = process.env.ADMIN_SECRET_PASSWORD
+  ? computeAdminSecretDigest(process.env.ADMIN_SECRET_PASSWORD)
+  : null;
 
 function buildInitialSeedEvents(): UsageEventRecord[] {
   const now = Date.now();
@@ -267,6 +275,61 @@ async function startServer() {
     telemetryEventsStore = [];
     saveServerTelemetryEvents([]);
     res.json({ ok: true });
+  });
+
+  app.post('/api/admin/verify', (req, res) => {
+    try {
+      const email = String(req.body?.email ?? '');
+      const password = String(req.body?.password ?? '');
+      const clientCustomDigest =
+        typeof req.body?.customPasswordDigest === 'string' &&
+        req.body.customPasswordDigest.startsWith('digest_v2_')
+          ? req.body.customPasswordDigest
+          : null;
+
+      const check = verifyAdminCredentialsPure({
+        email,
+        password,
+        customPasswordDigest: serverCustomPasswordDigest || clientCustomDigest,
+      });
+
+      if (!check.valid) {
+        res.json({ ok: false, error: check.reason || 'Otorisasi ditolak.' });
+        return;
+      }
+
+      res.json({ ok: true, email: AUTHORIZED_ADMIN_EMAIL });
+    } catch {
+      res.status(500).json({ ok: false, error: 'Gagal memverifikasi otorisasi admin.' });
+    }
+  });
+
+  app.post('/api/admin/change-password', (req, res) => {
+    try {
+      const currentPassword = String(req.body?.currentPassword ?? '');
+      const newPassword = String(req.body?.newPassword ?? '').trim();
+
+      const check = verifyAdminCredentialsPure({
+        email: AUTHORIZED_ADMIN_EMAIL,
+        password: currentPassword,
+        customPasswordDigest: serverCustomPasswordDigest,
+      });
+
+      if (!check.valid) {
+        res.json({ ok: false, error: 'Kata sandi saat ini tidak sesuai.' });
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        res.json({ ok: false, error: 'Kata sandi baru minimal 8 karakter.' });
+        return;
+      }
+
+      serverCustomPasswordDigest = computeAdminSecretDigest(newPassword);
+      res.json({ ok: true, digest: serverCustomPasswordDigest });
+    } catch {
+      res.status(500).json({ ok: false, error: 'Gagal memperbarui kata sandi.' });
+    }
   });
 
   app.post('/api/assess/generate', async (req, res) => {

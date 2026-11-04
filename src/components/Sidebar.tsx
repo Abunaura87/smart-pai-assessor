@@ -209,7 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="pt-2 flex items-center justify-between gap-2 text-[11px] text-slate-400">
               <span>Kurikulum Merdeka · PAIBP</span>
-              {isAdmin ? (
+              {isAdmin && (
                 <button
                   type="button"
                   onClick={onLogoutAdmin}
@@ -219,18 +219,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <LogOut className="w-3 h-3" />
                   <span>Keluar Admin</span>
                 </button>
-              ) : (
-                onOpenAdminLogin && (
-                  <button
-                    type="button"
-                    onClick={onOpenAdminLogin}
-                    title="Login Khusus Administrator (@abunaura)"
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-emerald-800 transition-colors cursor-pointer"
-                  >
-                    <Lock className="w-3 h-3" />
-                    <span>Admin</span>
-                  </button>
-                )
               )}
             </div>
           </div>

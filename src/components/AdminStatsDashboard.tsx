@@ -6,6 +6,7 @@ import {
   fetchAndSyncAllTelemetryEvents,
   recordTelemetryActivity,
 } from '../utils/telemetryClient';
+import { updateCustomAdminPassword } from '../utils/adminAuth';
 import {
   computeUsageStatistics,
   formatEventTypeLabel,
@@ -26,6 +27,7 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
+  KeyRound,
   Layers,
   Loader2,
   LogOut,
@@ -60,6 +62,13 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
   const [searchSchool, setSearchSchool] = useState<string>('');
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [passwordChangeFeedback, setPasswordChangeFeedback] = useState<{
+    ok: boolean;
+    message: string;
+  } | null>(null);
 
   const loadStats = async (showBanner = false) => {
     setIsLoading(true);
@@ -160,6 +169,35 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
     setBannerMessage('Seluruh catatan riwayat aktivitas statistik telah dikosongkan.');
   };
 
+  const handleUpdateAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordChangeFeedback(null);
+    const result = updateCustomAdminPassword(currentPasswordInput, newPasswordInput);
+    if (!result.ok) {
+      setPasswordChangeFeedback(result);
+      return;
+    }
+
+    // Sync to server if running backend
+    try {
+      await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: currentPasswordInput,
+          newPassword: newPasswordInput,
+        }),
+      });
+    } catch {
+      // Static host fallback handled via localStorage digest
+    }
+
+    setCurrentPasswordInput('');
+    setNewPasswordInput('');
+    setPasswordChangeFeedback(result);
+    setBannerMessage('Kata Sandi Rahasia Administrator berhasil diperbarui.');
+  };
+
   const maxDailyTotal = Math.max(1, ...stats.dailyTrend.map((d) => d.total));
 
   return (
@@ -227,6 +265,18 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
 
             <button
               type="button"
+              onClick={() => {
+                setIsPasswordModalOpen((prev) => !prev);
+                setPasswordChangeFeedback(null);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-emerald-900 hover:bg-emerald-800 text-amber-300 border border-amber-400/40 rounded-xl transition-colors cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Sandi Admin</span>
+            </button>
+
+            <button
+              type="button"
               onClick={onLogoutAdmin}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-rose-900/70 hover:bg-rose-800 text-rose-100 border border-rose-700/60 rounded-xl transition-colors cursor-pointer"
             >
@@ -235,6 +285,68 @@ export const AdminStatsDashboard: React.FC<AdminStatsDashboardProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Panel Ubah Kata Sandi Rahasia Admin */}
+        {isPasswordModalOpen && (
+          <form
+            onSubmit={handleUpdateAdminPassword}
+            className="mt-5 pt-5 border-t border-emerald-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end"
+          >
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-emerald-200 block">
+                Kata Sandi Rahasia Saat Ini
+              </label>
+              <input
+                type="password"
+                required
+                value={currentPasswordInput}
+                onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                placeholder="Masukkan kata sandi saat ini..."
+                className="w-full px-3 py-2 text-xs rounded-xl bg-emerald-900/80 border border-emerald-700 text-white placeholder:text-emerald-300/50 focus:outline-none focus:border-amber-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-emerald-200 block">
+                Kata Sandi Rahasia Baru (Min. 8 Karakter)
+              </label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={newPasswordInput}
+                onChange={(e) => setNewPasswordInput(e.target.value)}
+                placeholder="Masukkan kata sandi baru..."
+                className="w-full px-3 py-2 text-xs rounded-xl bg-emerald-900/80 border border-emerald-700 text-white placeholder:text-emerald-300/50 focus:outline-none focus:border-amber-400"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Simpan Sandi Baru
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="px-3 py-2 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-xs font-medium transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+            {passwordChangeFeedback && (
+              <div
+                className={`sm:col-span-3 text-xs font-medium px-3 py-2 rounded-lg ${
+                  passwordChangeFeedback.ok
+                    ? 'bg-emerald-900/90 text-amber-300 border border-emerald-700'
+                    : 'bg-rose-950/90 text-rose-200 border border-rose-700'
+                }`}
+              >
+                {passwordChangeFeedback.message}
+              </div>
+            )}
+          </form>
+        )}
       </section>
 
       {bannerMessage && (

@@ -24,10 +24,15 @@ import {
   UsageEventRecord,
   UsageEventType,
 } from './telemetryStats';
+import {
+  AUTHORIZED_ADMIN_EMAIL,
+  clearAdminSession,
+  createVerifiedAdminSession,
+  hasValidAdminSession,
+} from './adminAuth';
 
 const LOCAL_EVENTS_KEY = 'smart_pai_telemetry_events_v1';
 const VISITOR_ID_KEY = 'smart_pai_visitor_id_v1';
-const ADMIN_SESSION_KEY = 'smart_pai_admin_unlocked_v1';
 
 export function getOrCreateVisitorId(): string {
   try {
@@ -67,22 +72,17 @@ export function saveLocalTelemetryEvents(events: UsageEventRecord[]): void {
 }
 
 export function isLocalAdminUnlocked(): boolean {
-  try {
-    return localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  return hasValidAdminSession();
 }
 
-export function setLocalAdminUnlocked(unlocked: boolean): void {
-  try {
-    if (unlocked) {
-      localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-    } else {
-      localStorage.removeItem(ADMIN_SESSION_KEY);
-    }
-  } catch {
-    // Ignore storage issues
+export function setLocalAdminUnlocked(
+  unlocked: boolean,
+  method: 'google_oauth' | 'credentials' = 'credentials'
+): void {
+  if (unlocked) {
+    createVerifiedAdminSession(AUTHORIZED_ADMIN_EMAIL, method);
+  } else {
+    clearAdminSession();
   }
 }
 

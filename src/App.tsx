@@ -63,14 +63,26 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>('bagian-1');
   const hasRecordedVisitRef = useRef(false);
 
-  // Listen to Firebase Auth state for Admin verification
+  // Listen to Firebase Auth state for strict Admin verification
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      if (
+        user &&
+        user.emailVerified &&
+        user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+      ) {
         setIsAdmin(true);
         setAdminEmail(user.email);
         setIsGoogleAuthenticated(true);
-        setLocalAdminUnlocked(true);
+        setLocalAdminUnlocked(true, 'google_oauth');
+      } else if (user) {
+        // Akun Google selain Admin terdeteksi — segera cabut sesi & sign out
+        setIsGoogleAuthenticated(false);
+        setLocalAdminUnlocked(false);
+        setIsAdmin(false);
+        signOut(auth).catch(() => {
+          // Ignore signOut error
+        });
       } else {
         setIsGoogleAuthenticated(false);
         setIsAdmin(isLocalAdminUnlocked());
@@ -78,6 +90,22 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Pintasan keyboard khusus pemilik (Ctrl + Shift + A) untuk membuka jendela otorisasi Admin
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        if (isAdmin) {
+          setActiveSection('admin-stats');
+        } else {
+          setIsAdminLoginModalOpen(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdmin]);
 
   // Record a silent visit event once per session on mount
   useEffect(() => {
