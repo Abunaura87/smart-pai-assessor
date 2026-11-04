@@ -22,7 +22,7 @@ import { ParameterPanel } from './components/ParameterPanel';
 import { AssessmentDocument } from './components/AssessmentDocument';
 import { KaidahValidatorSection } from './components/KaidahValidatorSection';
 import { KopPejabatForm } from './components/KopPejabatForm';
-import { BookCheck, Layers, Loader2, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
+import { BookCheck, Layers, Loader2, Lock, PanelLeftClose, PanelLeftOpen, Settings2, X } from 'lucide-react';
 
 export default function App() {
   const [activePackage, setActivePackage] = useState<AssessmentPackage>(PRESET_PACKAGES[0]);
@@ -348,8 +348,8 @@ export default function App() {
           />
         </main>
 
-        <footer className="no-print border-t border-slate-200 bg-white py-6 px-6 mt-12">
-          <div className="w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <footer className="no-print mt-12 border-t border-slate-200 bg-white">
+          <div className="w-full mx-auto py-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div>
               Smart PAI Assessor — Instrumen Evaluasi Pembelajaran Pendidikan Agama Islam & Budi
               Pekerti
@@ -357,6 +357,24 @@ export default function App() {
             <div>
               Acuan: Kepka Nomor 020 Tahun 2026 · 5 Dimensi Cinta · Standar KKG/MGMP PAI & Kemenag
               RI
+            </div>
+          </div>
+
+          {/* Watermark Hak Cipta Resmi (@abunaura) */}
+          <div className="relative overflow-hidden border-t-2 border-[#b8860b]/70 bg-gradient-to-b from-[#9c6f44] via-[#b08254] to-[#8a5e35] py-4 px-6 select-none shadow-inner">
+            {/* Garis panel vertikal ala kayu klasik seperti pada referensi */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_88px,rgba(45,25,10,0.65)_88px,rgba(45,25,10,0.65)_90px,rgba(255,235,190,0.2)_90px,rgba(255,235,190,0.2)_92px)]"
+            />
+            <div className="relative z-10 flex items-center justify-center gap-3 text-center">
+              <span className="font-serif text-xs sm:text-sm tracking-[0.14em] uppercase text-[#fef08a] drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
+                Copyright © 2026 Smart PAI Assessor By @abunaura. All Rights Reserved.
+              </span>
+              <Lock
+                className="w-3.5 h-3.5 text-[#fef08a]/80 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]"
+                aria-label="Protected Watermark"
+              />
             </div>
           </div>
         </footer>
