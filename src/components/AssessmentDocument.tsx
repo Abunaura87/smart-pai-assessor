@@ -9,6 +9,7 @@ import {
   getPracticeInstrument,
 } from '../utils/paiRules';
 import {
+  buildExcelDocContent,
   buildPlainTextWithoutMarkdown,
   buildRichDocumentHtml,
   buildWordDocContent,
@@ -260,6 +261,22 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // Download Microsoft Excel (.xls) for 9-Column Kisi-Kisi Matrix & Answer Key
+  const handleDownloadExcel = () => {
+    const excelContent = buildExcelDocContent(pkg, kopConfig);
+    const blob = new Blob(['\ufeff', excelContent], {
+      type: 'application/vnd.ms-excel;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${pkg.id}-kisi-kisi-dan-kunci-paibp.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Compute Horizontal Answer Key Grid (4 columns side-by-side like official KKG / US sheets)
   const rowsPerKeyCol = Math.max(5, Math.ceil(pgAndObjektifSoal.length / 4));
 
@@ -350,6 +367,16 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
             >
               <Download className="w-3.5 h-3.5" />
               <span>Unduh Word (.doc)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadExcel}
+              title="Unduh matriks Kisi-Kisi 9 kolom dan Kunci Jawaban ke dalam Microsoft Excel (.xls)"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-950 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-800" />
+              <span>Unduh Excel (.xls)</span>
             </button>
 
             <button

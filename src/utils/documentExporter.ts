@@ -1265,3 +1265,147 @@ xmlns="http://www.w3.org/TR/REC-html40">
 </body>
 </html>`;
 }
+
+/**
+ * Generates an Excel-compatible HTML workbook (.xls) containing:
+ * 1) Matriks Kisi-Kisi Penulisan Soal Resmi (9 Kolom)
+ * 2) Tabel Pemetaan Soal Uraian / Essay
+ * 3) Daftar Kunci Jawaban, Skor & Pembahasan
+ */
+export function buildExcelDocContent(
+  pkg: AssessmentPackage,
+  kop: KopSoalConfig
+): string {
+  const defaultKelasSmt = formatKelasSemester(
+    pkg.parameters.kelas,
+    pkg.parameters.jenisUjian,
+    pkg.parameters.semester
+  );
+  const kelasFormatted = formatKelasDisplay(pkg.parameters.kelas);
+
+  const kisiRowsHtml = pkg.kisiKisi
+    .map(
+      (r) => `<tr>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${r.no}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.elemen)} (${escapeHtml(
+          r.dimensiCinta || ELEMEN_DIMENSI_CINTA[r.elemen] || '-'
+        )})</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.capaianTujuanPembelajaran
+        )}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.kelasSmt || defaultKelasSmt
+        )}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.materiPokok)}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(r.indikatorSoalABCD)}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.levelKognitif
+        )}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          r.bentukSoal
+        )}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${r.nomorSoal}</td>
+      </tr>`
+    )
+    .join('');
+
+  const kunciRowsHtml = pkg.butirSoal
+    .map(
+      (s) => `<tr>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${s.nomor}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          s.bentukSoal
+        )}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${escapeHtml(
+          s.levelKognitif
+        )}</td>
+        <td style="border:1pt solid #000000; padding:4pt; font-weight:bold;">${escapeHtml(
+          s.kunciJawaban
+        )}</td>
+        <td style="text-align:center; border:1pt solid #000000; padding:4pt;">${s.skorMaksimal}</td>
+        <td style="border:1pt solid #000000; padding:4pt;">${escapeHtml(s.pembahasan)}</td>
+      </tr>`
+    )
+    .join('');
+
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8" />
+  <title>Kisi-Kisi & Kunci Jawaban - ${escapeHtml(pkg.judulAsesmen)}</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <x:ExcelWorkbook>
+      <x:ExcelWorksheets>
+        <x:ExcelWorksheet>
+          <x:Name>Kisi-Kisi dan Kunci</x:Name>
+          <x:WorksheetOptions>
+            <x:DisplayGridlines/>
+          </x:WorksheetOptions>
+        </x:ExcelWorksheet>
+      </x:ExcelWorksheets>
+    </x:ExcelWorkbook>
+  </xml>
+  <![endif]-->
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+    }
+    table {
+      border-collapse: collapse;
+    }
+  </style>
+</head>
+<body>
+  <table style="width:100%; border-collapse:collapse;">
+    <tr>
+      <td colspan="9" style="font-weight:bold; font-size:13pt; text-align:center;">KISI-KISI PENULISAN SOAL &amp; KUNCI JAWABAN</td>
+    </tr>
+    <tr>
+      <td colspan="9" style="font-weight:bold; font-size:12pt; text-align:center;">${escapeHtml(
+        kop.barisKop1.toUpperCase()
+      )} - ${escapeHtml(kop.barisKop2.toUpperCase())}</td>
+    </tr>
+    <tr>
+      <td colspan="9" style="font-weight:bold; font-size:11pt; text-align:center;">${escapeHtml(
+        kop.judulAsesmenDokumen.toUpperCase()
+      )} (${escapeHtml(kop.tahunPelajaran)})</td>
+    </tr>
+    <tr>
+      <td colspan="9" style="text-align:center;">Mata Pelajaran: Pendidikan Agama Islam dan Budi Pekerti | Kelas: ${escapeHtml(
+        kelasFormatted
+      )} (${escapeHtml(defaultKelasSmt)})</td>
+    </tr>
+    <tr><td colspan="9"></td></tr>
+    <tr style="background-color:#d1fae5; font-weight:bold;">
+      <th style="border:1pt solid #000000; padding:6pt;">No</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Elemen PAI &amp; Dimensi Cinta</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Capaian / Tujuan Pembelajaran (CP/TP)</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Kelas / Smt</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Materi Pokok</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Indikator Soal (ABCD)</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Level Kognitif</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Bentuk Soal</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Nomor Soal</th>
+    </tr>
+    ${kisiRowsHtml}
+    <tr><td colspan="9"></td></tr>
+    <tr>
+      <td colspan="6" style="font-weight:bold; font-size:12pt;">DAFTAR KUNCI JAWABAN, SKOR &amp; PEMBAHASAN</td>
+    </tr>
+    <tr style="background-color:#fef3c7; font-weight:bold;">
+      <th style="border:1pt solid #000000; padding:6pt;">No Soal</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Bentuk Soal</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Level Kognitif</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Kunci Jawaban</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Skor Maks</th>
+      <th style="border:1pt solid #000000; padding:6pt;">Pembahasan Pedagogis</th>
+    </tr>
+    ${kunciRowsHtml}
+  </table>
+</body>
+</html>`;
+}
+

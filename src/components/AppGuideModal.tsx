@@ -126,8 +126,8 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                 <div className="text-xs leading-relaxed text-emerald-950">
                   <strong>Ringkasan Alur Kerja:</strong> Aplikasi ini dirancang agar Bapak/Ibu Guru
                   PAI dapat menyusun perangkat asesmen lengkap (Kisi-Kisi, Naskah Soal, Kartu Soal,
-                  Kunci Jawaban, dan Rubrik) hanya dalam <strong>5 langkah berurutan</strong> di
-                  panel sebelah kiri.
+                  Kunci Jawaban, dan Rubrik) hanya dalam <strong>5 langkah berurutan</strong> sesuai
+                  label bagian di panel sebelah kiri.
                 </div>
               </div>
 
@@ -157,10 +157,11 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                       )}
                     </div>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Klik tombol <strong>&quot;⚙️ Pengaturan Kop &amp; Pejabat&quot;</strong> untuk
-                      mengisi Nama Instansi/Dinas, Nama Sekolah/Madrasah, Tahun Pelajaran, Tempat
-                      &amp; Tanggal Pengesahan, Nama Kepala Sekolah, serta Nama Guru PAI. Data ini
-                      otomatis tersimpan di peramban Anda.
+                      Klik tombol <strong>&quot;⚙️ Pengaturan Kop &amp; Pejabat Penandatangan&quot;</strong>{' '}
+                      (atau buka akordeon <strong>06. Pengaturan Kop &amp; Identitas Penandatangan</strong>)
+                      untuk mengisi Nama Instansi/Dinas, Nama Sekolah/Madrasah, Tahun Pelajaran,
+                      Tempat &amp; Tanggal Pengesahan, Nama Pengawas/Kepala Sekolah, serta Nama Guru
+                      PAI. Data ini otomatis tersimpan di peramban Anda.
                     </p>
                   </div>
                 </div>
@@ -172,15 +173,14 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                   </div>
                   <div className="space-y-1.5 flex-1">
                     <h3 className="text-sm font-bold text-slate-900">
-                      Pilih Fase, Kelas Spesifik &amp; Jenis Asesmen (Bagian 01)
+                      Pilih Fase, Kelas Spesifik, Jenis Asesmen &amp; Semester (Bagian 01)
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Pada panel kiri <strong>&quot;01. Pilih Fase &amp; Jenjang Pendidikan&quot;</strong>,
-                      pilih Fase (Fase A s.d. Fase F), lalu pilih <strong>Kelas Spesifik</strong>{' '}
-                      (Kelas 1 s.d. Kelas 12) dan <strong>Jenis Asesmen / Ujian</strong> (misalnya{' '}
-                      <em>Sumatif Akhir Semester (SAS)</em>, <em>Sumatif Akhir Tahun (SAT)</em>,
-                      atau <em>Asesmen Tengah Semester (ATS)</em>). Opsi pilihan ganda (3, 4, atau 5
-                      opsi) akan menyesuaikan otomatis dengan jenjang kelas.
+                      Pada bagian <strong>&quot;01. Pilih Fase &amp; Jenjang Pendidikan&quot;</strong>,
+                      pilih Fase (Fase A s.d. Fase F), pilih <strong>Kelas Spesifik</strong> (Kelas 1
+                      s.d. Kelas 12), pilih <strong>Jenis Asesmen / Ujian</strong>, lalu pilih tombol{' '}
+                      <strong>Pilih Semester Pembelajaran</strong> (<em>Semester 1 Ganjil</em>,{' '}
+                      <em>Semester 2 Genap</em>, atau <em>Semua Semester</em>).
                     </p>
                   </div>
                 </div>
@@ -192,14 +192,14 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                   </div>
                   <div className="space-y-1.5 flex-1">
                     <h3 className="text-sm font-bold text-slate-900">
-                      Pilih Semester &amp; Topik Materi Resmi CP 020/2026 (Bagian 03)
+                      Pilih Elemen PAIBP &amp; Topik Materi Resmi CP 020/2026 (Bagian 02 &amp; 03)
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Pada <strong>&quot;03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)&quot;</strong>,
-                      gunakan tombol filter <strong>Smt. Ganjil / Smt. Genap</strong>, lalu buka
-                      dropdown <strong>Pilih Topik Materi Resmi</strong>. Anda dapat memilih{' '}
-                      <strong>📚 [PAKET LENGKAP SAS/SAT/US]</strong> untuk ujian gabungan 5 elemen
-                      satu semester penuh, atau memilih per Bab/Elemen spesifik.
+                      Pada bagian <strong>&quot;03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)&quot;</strong>,
+                      Anda dapat langsung mengeklik tombol <strong>Topik Pilihan Cepat</strong> atau
+                      membuka dropdown <strong>Pilih Topik Materi Resmi</strong>. Tersedia pilihan{' '}
+                      <strong>📚 [PAKET SAS / SAT / US]</strong> untuk ujian gabungan 5 elemen satu
+                      semester penuh maupun pilihan per Bab/Elemen spesifik.
                     </p>
                   </div>
                 </div>
@@ -211,14 +211,14 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                   </div>
                   <div className="space-y-1.5 flex-1">
                     <h3 className="text-sm font-bold text-slate-900">
-                      Atur Jumlah Soal, Proporsi Kognitif &amp; Klik &quot;Susun Paket Asesmen&quot;
+                      Atur Jumlah Soal &amp; Klik &quot;Susun Instrumen Asesmen (5 Bagian Resmi)&quot;
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Pada <strong>&quot;04. Struktur &amp; Proporsi Kognitif&quot;</strong>,
-                      tentukan jumlah soal Pilihan Ganda, Isian Singkat, dan Uraian, serta persentase
-                      Level Kognitif (L1 Pemahaman, L2 Penerapan, L3 Penalaran HOTS). Setelah sesuai,
-                      klik tombol hijau{' '}
-                      <strong>&quot;Susun Paket Asesmen Lengkap (5 Bagian)&quot;</strong>.
+                      Pada <strong>&quot;04. Bentuk &amp; Jumlah Butir Soal&quot;</strong> dan{' '}
+                      <strong>&quot;05. Komposisi Kesulitan (Bloom)&quot;</strong>, tentukan jumlah
+                      soal Pilihan Ganda, Isian Singkat, atau Uraian beserta persentase L1, L2, dan
+                      L3 (HOTS). Setelah selesai, klik tombol hijau{' '}
+                      <strong>&quot;Susun Instrumen Asesmen (5 Bagian Resmi)&quot;</strong>.
                     </p>
                   </div>
                 </div>
@@ -230,13 +230,15 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                   </div>
                   <div className="space-y-1.5 flex-1">
                     <h3 className="text-sm font-bold text-slate-900">
-                      Tinjau Hasil, Edit Langsung, atau Unduh ke Word / Excel / Cetak PDF
+                      Gunakan Bar Tombol Dokumen: Mode Lembar Murid, Salin, Word, Excel, atau PDF
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Dokumen hasil akan langsung tampil di panel sebelah kanan lengkap dari Bagian
-                      1 hingga Bagian 5. Gunakan bar tombol di bagian atas dokumen untuk mengunduh
-                      file <strong>Word (.doc)</strong>, <strong>Excel (.xls)</strong>, atau{' '}
-                      <strong>Cetak / Simpan PDF</strong>.
+                      Di bagian paling atas dokumen hasil (panel kanan), tersedia deretan tombol aksi:{' '}
+                      <strong>&quot;Mode Lembar Soal Murid&quot;</strong>,{' '}
+                      <strong>&quot;Salin Naskah&quot;</strong>,{' '}
+                      <strong>&quot;Unduh Word (.doc)&quot;</strong>,{' '}
+                      <strong>&quot;Unduh Excel (.xls)&quot;</strong>, dan{' '}
+                      <strong>&quot;Cetak PDF&quot;</strong>.
                     </p>
                   </div>
                 </div>
@@ -252,28 +254,29 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
               <p className="text-xs text-slate-600 leading-relaxed">
                 Aplikasi telah dilengkapi basis data kurikulum resmi{' '}
                 <strong>Keputusan Kepala BSKAP Nomor 020 Tahun 2026</strong> untuk Kelas 1 s.d.
-                Kelas 12 (Semester 1 Ganjil &amp; Semester 2 Genap). Ada 2 cara otomatis menentukan
-                semester:
+                Kelas 12 (Semester 1 Ganjil &amp; Semester 2 Genap). Anda dapat mengatur filter
+                semester melalui kontrol berikut:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
                   <div className="text-xs font-bold text-emerald-900 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Cara A: Melalui Dropdown &quot;Jenis Asesmen / Ujian&quot;</span>
+                    <span>Cara A: Tombol &quot;Pilih Semester Pembelajaran&quot; (Bagian 01)</span>
                   </div>
                   <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
                     <li>
-                      Memilih <strong>Sumatif Akhir Semester (SAS)</strong> otomatis menyaring materi
-                      ke <strong>Semester 1 (Ganjil)</strong>.
+                      Klik <strong>Semester 1 (Ganjil)</strong> untuk menampilkan topik dan menyusun
+                      kisi-kisi Semester Ganjil.
                     </li>
                     <li>
-                      Memilih <strong>Sumatif Akhir Tahun (SAT)</strong> otomatis menyaring materi ke{' '}
-                      <strong>Semester 2 (Genap)</strong>.
+                      Klik <strong>Semester 2 (Genap)</strong> untuk menampilkan topik dan menyusun
+                      kisi-kisi Semester Genap.
                     </li>
                     <li>
-                      Memilih <strong>Ujian Sekolah / Madrasah (US/UM)</strong> menampilkan seluruh
-                      materi lintas semester.
+                      Klik <strong>Semua Semester</strong> (atau pilih jenis ujian{' '}
+                      <em>Asesmen Akhir Jenjang / AAJ</em>) untuk menggabungkan materi lintas
+                      semester.
                     </li>
                   </ul>
                 </div>
@@ -281,37 +284,37 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
                   <div className="text-xs font-bold text-emerald-900 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Cara B: Klik Tombol Badge Semester di Bagian 03</span>
+                    <span>Cara B: Filter &amp; Badge Semester di Bagian 03</span>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Di sebelah kanan judul <strong>03. Topik Materi &amp; CP/TP</strong>, terdapat
-                    tombol badge interaktif (<strong>Smt. Ganjil</strong> /{' '}
-                    <strong>Smt. Genap</strong> / <strong>Semua Smt.</strong>). Klik tombol tersebut
-                    untuk berganti filter semester kapan saja.
+                    Pada bagian <strong>03. Topik Materi &amp; Capaian Pembelajaran (CP/TP)</strong>,
+                    terdapat tombol <strong>Smt. 1 (Ganjil)</strong>, <strong>Smt. 2 (Genap)</strong>,
+                    dan <strong>Semua Semester</strong>, serta badge bulat di kanan atas yang dapat
+                    diklik kapan saja untuk menyaring daftar topik secara instan.
                   </p>
                 </div>
               </div>
 
               <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/70 space-y-2">
                 <div className="text-xs font-bold text-amber-950">
-                  💡 Kapan Menggunakan &quot;[PAKET LENGKAP SAS/SAT/US]&quot; vs &quot;Per Bab&quot;?
+                  💡 Kapan Menggunakan &quot;[PAKET SAS/SAT/US]&quot; vs &quot;Per Bab&quot;?
                 </div>
                 <ul className="text-xs text-amber-900 space-y-1.5 list-disc pl-4 leading-relaxed">
                   <li>
-                    <strong>Pilih 📚 [PAKET SAS / SAT / US] (Paling Atas di Dropdown):</strong> Jika
-                    Anda sedang menyusun soal ujian akhir semester atau ujian sekolah yang harus
+                    <strong>Pilih 📚 [PAKET SAS / SAT / US] (Grup Paling Atas di Dropdown):</strong>{' '}
+                    Gunakan saat menyusun soal ujian akhir semester atau akhir jenjang yang wajib
                     mencakup <strong>5 Elemen PAI sekaligus</strong> (Al-Qur&apos;an Hadis, Akidah,
                     Akhlak, Fikih, dan SPI) secara proporsional.
                   </li>
                   <li>
-                    <strong>Pilih [Bab 1 s.d. Bab 5]:</strong> Jika Anda sedang menyusun{' '}
-                    <strong>Ulangan Harian / Formatif / Sumatif Lingkup Materi</strong> yang hanya
-                    fokus pada 1 bab atau elemen tertentu.
+                    <strong>Pilih [Bab 1 s.d. Bab 10]:</strong> Gunakan saat menyusun{' '}
+                    <strong>Asesmen Formatif / Sumatif Lingkup Materi (TP)</strong> yang hanya
+                    berfokus pada 1 bab tertentu.
                   </li>
                   <li>
-                    <strong>Pilih &quot;+ Ketik / Kustomisasi Topik &amp; TP Sendiri&quot;:</strong>{' '}
-                    Jika Anda ingin mengetik atau memodifikasi kalimat Materi Pokok dan Tujuan
-                    Pembelajaran secara bebas.
+                    <strong>Pilih &quot;➕ Ketik / Kustomisasi Topik &amp; TP Sendiri&quot;:</strong>{' '}
+                    Gunakan jika Anda ingin mengetik bebas kalimat Topik Materi dan Tujuan
+                    Pembelajaran sendiri.
                   </li>
                 </ul>
               </div>
@@ -329,9 +332,9 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                     Bagian 1 — Kisi-Kisi Penulisan Soal Resmi (Matriks 9 Kolom)
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    Memuat No, Elemen PAI, Dimensi Cinta (CP 020/2026), Capaian/Tujuan Pembelajaran,
-                    Materi Pokok, Indikator Soal (ABCD), Level Kognitif (L1/L2/L3), Bentuk Soal, dan
-                    Nomor Soal.
+                    Memuat No, Elemen PAI &amp; Dimensi Cinta (CP 020/2026), Capaian/Tujuan
+                    Pembelajaran, Kelas/Smt, Materi Pokok, Indikator Soal (ABCD), Level Kognitif
+                    (L1/L2/L3), Bentuk Soal, dan Nomor Soal.
                   </p>
                 </div>
 
@@ -374,7 +377,7 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
                   <p className="text-xs text-slate-600 mt-1">
                     Tabel kriteria skor uraian serta lembar observasi ujian praktik (seperti praktik
                     wudu, salat, membaca Al-Qur&apos;an/tajwid, atau proyek akhlak) lengkap dengan
-                    lembar pengesahan Kepala Sekolah &amp; Guru PAI.
+                    lembar pengesahan Pejabat &amp; Guru PAI.
                   </p>
                 </div>
               </div>
@@ -384,45 +387,63 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({
           {activeTab === 'tips-ekspor' && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900">
-                Panduan Ekspor ke MS Word (.doc), MS Excel (.xls) &amp; Cetak PDF
+                Fungsi Tombol pada Bar Aksi Dokumen (Salin, Word, Excel, Mode Murid &amp; PDF)
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
-                    <FileText className="w-4 h-4 text-blue-700 shrink-0" />
-                    <span>Unduh Word (.doc)</span>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Gunakan tombol <strong>&quot;Word: Paket Lengkap&quot;</strong> atau{' '}
-                    <strong>&quot;Word: Naskah Soal Saja&quot;</strong> untuk mengedit naskah lebih
-                    lanjut di Microsoft Word dengan ukuran kertas A4 dan font Arab Traditional
-                    Arabic / Amiri yang rapi.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Unduh Excel (.xls)</span>
+                    <FileText className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span>Tombol &quot;Unduh Word (.doc)&quot; &amp; &quot;Salin Naskah&quot;</span>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Gunakan tombol <strong>&quot;Excel: Kisi-Kisi &amp; Kunci&quot;</strong> untuk
-                    mengunduh tabel matriks Kisi-Kisi 9 kolom dan daftar Kunci Jawaban ke dalam
-                    format lembar kerja Microsoft Excel.
+                    Klik <strong>&quot;Unduh Word (.doc)&quot;</strong> untuk mengunduh dokumen
+                    Microsoft Word ukuran A4 berhuruf <em>Times New Roman 12pt</em>, atau klik{' '}
+                    <strong>&quot;Salin Naskah&quot;</strong> untuk menyalin tabel &amp; naskah
+                    berformat <em>Rich Text</em> langsung ke clipboard (tinggal tekan{' '}
+                    <em>Ctrl + V</em> di MS Word).
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                    <Download className="w-4 h-4 text-slate-700 shrink-0" />
-                    <span>Cetak / Simpan PDF</span>
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-950">
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-800 shrink-0" />
+                    <span>Tombol &quot;Unduh Excel (.xls)&quot;</span>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Saat jendela cetak muncul, pilih Destination{' '}
-                    <strong>&quot;Save as PDF&quot;</strong>, ukuran kertas <strong>A4</strong>, dan
-                    hilangkan centang <em>Headers and footers</em> agar hasil cetak bersih seperti
-                    dokumen ujian resmi.
+                    Klik tombol <strong>&quot;Unduh Excel (.xls)&quot;</strong> (di sebelah kanan
+                    tombol <em>Unduh Word</em>) untuk mengunduh tabel matriks{' '}
+                    <strong>Kisi-Kisi 9 Kolom</strong> beserta daftar{' '}
+                    <strong>Kunci Jawaban, Skor &amp; Pembahasan</strong> ke dalam format lembar
+                    kerja Microsoft Excel (<code>.xls</code>).
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                    <Layers className="w-4 h-4 text-slate-700 shrink-0" />
+                    <span>Tombol &quot;Mode Lembar Soal Murid&quot;</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Jika Anda hanya ingin mencetak atau mengunduh{' '}
+                    <strong>Lembar Soal untuk Siswa</strong> (tanpa Kisi-Kisi dan tanpa Kunci
+                    Jawaban), klik terlebih dahulu tombol{' '}
+                    <strong>&quot;Mode Lembar Soal Murid&quot;</strong>, lalu klik{' '}
+                    <strong>&quot;Unduh Word (.doc)&quot;</strong> atau{' '}
+                    <strong>&quot;Cetak PDF&quot;</strong>.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                    <Download className="w-4 h-4 text-emerald-800 shrink-0" />
+                    <span>Tombol &quot;Cetak PDF&quot; / &quot;Cetak Naskah Asesmen&quot;</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Klik <strong>&quot;Cetak PDF&quot;</strong> pada bar dokumen (atau{' '}
+                    <strong>&quot;Cetak Naskah Asesmen&quot;</strong> di sudut kanan atas). Pilih
+                    Destination <strong>&quot;Save as PDF&quot;</strong>, ukuran kertas{' '}
+                    <strong>A4</strong>, dan hilangkan centang <em>Headers and footers</em>.
                   </p>
                 </div>
               </div>
