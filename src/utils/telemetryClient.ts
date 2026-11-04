@@ -168,10 +168,10 @@ export async function recordTelemetryActivity(options: {
     'evt'
   );
 
-  const jumlahSoal = pkg
+  const jumlahSoal: number = pkg
     ? pkg.butirSoal.length
-    : Object.values(parameters.jumlahSoalPerBentuk || {}).reduce(
-        (acc, val) => acc + (Number(val) || 0),
+    : (parameters.bentukSoalCounts || []).reduce(
+        (acc: number, item) => acc + (Number(item.jumlah) || 0),
         0
       ) || 6;
 
