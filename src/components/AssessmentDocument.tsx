@@ -38,6 +38,7 @@ interface AssessmentDocumentProps {
   onResetKopConfig: () => void;
   onOpenKopModal: () => void;
   onPrint: () => void;
+  onRecordExport?: (type: 'export_word' | 'export_excel' | 'copy_naskah') => void;
 }
 
 type UsSubTab = 'all' | 'cover' | 'berita-acara' | 'naskah' | 'ljk' | 'praktik';
@@ -49,6 +50,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
   onResetKopConfig,
   onOpenKopModal,
   onPrint,
+  onRecordExport,
 }) => {
   const [studentSheetOnly, setStudentSheetOnly] = useState(false);
   const [showKopSettings, setShowKopSettings] = useState(false);
@@ -200,6 +202,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
 
   // Rich Text Copy (HTML + Clean Plain Text fallback, zero raw Markdown symbols)
   const handleCopyRichText = async () => {
+    onRecordExport?.('copy_naskah');
     const richHtml = buildRichDocumentHtml(pkg, kopConfig, { studentSheetOnly });
     const cleanPlainText = buildPlainTextWithoutMarkdown(pkg, kopConfig, { studentSheetOnly });
 
@@ -246,6 +249,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
 
   // Download native Microsoft Word (.doc) with Office XML namespaces & Times New Roman 12pt
   const handleDownloadWord = () => {
+    onRecordExport?.('export_word');
     const wordContent = buildWordDocContent(pkg, kopConfig, { studentSheetOnly });
     const blob = new Blob(['\ufeff', wordContent], {
       type: 'application/msword;charset=utf-8',
@@ -263,6 +267,7 @@ export const AssessmentDocument: React.FC<AssessmentDocumentProps> = ({
 
   // Download Microsoft Excel (.xls) for 9-Column Kisi-Kisi Matrix & Answer Key
   const handleDownloadExcel = () => {
+    onRecordExport?.('export_excel');
     const excelContent = buildExcelDocContent(pkg, kopConfig);
     const blob = new Blob(['\ufeff', excelContent], {
       type: 'application/vnd.ms-excel;charset=utf-8',

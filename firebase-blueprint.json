@@ -1,0 +1,152 @@
+{
+  "entities": {
+    "AdminProfile": {
+      "title": "AdminProfile",
+      "description": "Data profil administrator utama aplikasi Smart PAI Assessor.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID autentikasi Firebase milik Admin."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160,
+          "description": "Alamat email terverifikasi milik Admin."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Nama tampilan Admin."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "maxLength": 20,
+          "description": "Peran tetap sebagai admin."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan dokumen admin di server."
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt"]
+    },
+    "UsageEvent": {
+      "title": "UsageEvent",
+      "description": "Catatan aktivitas penggunaan aplikasi Smart PAI Assessor untuk statistik Admin.",
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID unik aktivitas penggunaan."
+        },
+        "visitorId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID sesi/perangkat anonim guru pengguna."
+        },
+        "authorUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID pengguna/admin yang menyimpan log ke Firestore."
+        },
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "visit",
+            "generate_soal",
+            "preset_load",
+            "export_word",
+            "export_excel",
+            "export_pdf",
+            "copy_naskah"
+          ],
+          "maxLength": 40,
+          "description": "Jenis aktivitas yang dilakukan pengguna."
+        },
+        "fase": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Fase Kurikulum Merdeka (Fase A - Fase F)."
+        },
+        "kelas": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Kelas yang dipilih (Kelas 1 - Kelas 12)."
+        },
+        "semester": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Semester yang dipilih (Ganjil, Genap, Semua)."
+        },
+        "jenisUjian": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Jenis asesmen (Formatif, Sumatif Lingkup Materi, ATS, SAS/SAT, US)."
+        },
+        "elemenUtama": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Elemen PAIBP utama."
+        },
+        "topikMateri": {
+          "type": "string",
+          "maxLength": 250,
+          "description": "Topik materi atau paket bab yang disusun."
+        },
+        "namaSekolah": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Nama sekolah/madrasah dari konfigurasi Kop Soal."
+        },
+        "jumlahSoal": {
+          "type": "number",
+          "description": "Jumlah butir soal pada paket asesmen."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pencatatan di server Firestore."
+        }
+      },
+      "required": [
+        "eventId",
+        "visitorId",
+        "authorUid",
+        "eventType",
+        "fase",
+        "kelas",
+        "semester",
+        "jenisUjian",
+        "elemenUtama",
+        "topikMateri",
+        "namaSekolah",
+        "jumlahSoal",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminProfile"
+      },
+      "description": "Koleksi daftar administrator resmi aplikasi."
+    },
+    "/usageEvents/{eventId}": {
+      "schema": {
+        "$ref": "#/entities/UsageEvent"
+      },
+      "description": "Koleksi log statistik aktivitas pengguna yang hanya dapat dibaca oleh Admin."
+    }
+  }
+}

@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == "marhaniza05@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Blueprint Validation Helpers
+    function isValidAdminProfile(data, adminId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.uid == adminId &&
+        data.uid == request.auth.uid &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.email == request.auth.token.email &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120 &&
+        data.role is string && data.role == 'admin' &&
+        data.createdAt == request.time;
+    }
+
+    function isValidUsageEvent(data, eventId) {
+      return data.keys().hasAll([
+          'eventId',
+          'visitorId',
+          'authorUid',
+          'eventType',
+          'fase',
+          'kelas',
+          'semester',
+          'jenisUjian',
+          'elemenUtama',
+          'topikMateri',
+          'namaSekolah',
+          'jumlahSoal',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'eventId',
+          'visitorId',
+          'authorUid',
+          'eventType',
+          'fase',
+          'kelas',
+          'semester',
+          'jenisUjian',
+          'elemenUtama',
+          'topikMateri',
+          'namaSekolah',
+          'jumlahSoal',
+          'createdAt'
+        ]) &&
+        isValidId(data.eventId) &&
+        data.eventId == eventId &&
+        isValidId(data.visitorId) &&
+        isValidId(data.authorUid) &&
+        data.authorUid == request.auth.uid &&
+        data.eventType is string &&
+        data.eventType.size() <= 40 &&
+        data.eventType in [
+          'visit',
+          'generate_soal',
+          'preset_load',
+          'export_word',
+          'export_excel',
+          'export_pdf',
+          'copy_naskah'
+        ] &&
+        data.fase is string && data.fase.size() >= 1 && data.fase.size() <= 40 &&
+        data.kelas is string && data.kelas.size() >= 1 && data.kelas.size() <= 60 &&
+        data.semester is string && data.semester.size() >= 1 && data.semester.size() <= 40 &&
+        data.jenisUjian is string && data.jenisUjian.size() >= 1 && data.jenisUjian.size() <= 80 &&
+        data.elemenUtama is string && data.elemenUtama.size() >= 1 && data.elemenUtama.size() <= 120 &&
+        data.topikMateri is string && data.topikMateri.size() >= 1 && data.topikMateri.size() <= 250 &&
+        data.namaSekolah is string && data.namaSekolah.size() >= 1 && data.namaSekolah.size() <= 160 &&
+        data.jumlahSoal is int && data.jumlahSoal >= 0 && data.jumlahSoal <= 200 &&
+        data.createdAt == request.time;
+    }
+
+    // Collection 1: Admin Profiles
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isAdmin() && existing().uid == adminId;
+      allow list: if isAdmin() && existing().role == 'admin';
+      allow create: if isValidId(adminId) && isValidAdminProfile(incoming(), adminId) && isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Collection 2: Usage Telemetry Events
+    match /usageEvents/{eventId} {
+      allow get: if isValidId(eventId) && isAdmin() && existing().eventId == eventId;
+      allow list: if isAdmin() && existing().eventId is string;
+      allow create: if isVerifiedUser() && isValidId(eventId) && isValidUsageEvent(incoming(), eventId);
+      allow update: if false;
+      allow delete: if isValidId(eventId) && isAdmin();
+    }
+  }
+}
